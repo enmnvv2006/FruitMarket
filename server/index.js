@@ -17,21 +17,36 @@ const DB_EXAMPLE_PATH = path.join(__dirname, "data", "auth-db.example.json");
 
 const app = express();
 const PORT = Number(process.env.AUTH_SERVER_PORT || 4000);
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "fruit-market-access-secret";
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "fruit-market-refresh-secret";
 const ACCESS_EXPIRES_IN = "15m";
 const REFRESH_EXPIRES_IN = "7d";
 const REFRESH_COOKIE = "refreshToken";
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const COOKIE_SECURE = process.env.COOKIE_SECURE
+  ? process.env.COOKIE_SECURE === "true"
+  : IS_PRODUCTION;
+const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || (COOKIE_SECURE ? "none" : "lax");
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 
-const allowedOrigins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"];
+const allowedOrigins = new Set(
+  (
+    process.env.CORS_ORIGINS ||
+    `${FRONTEND_URL},http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173`
+  )
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.has(origin)) {
         callback(null, true);
         return;
       }
@@ -58,7 +73,7 @@ app.get("/", (req, res) => {
       <body>
         <h1>FruitMarket Auth API</h1>
         <p>Backend запущен успешно.</p>
-        <p>Frontend открывайте на <a href="http://localhost:3000">http://localhost:3000</a>.</p>
+        <p>Frontend открывайте на <a href="${FRONTEND_URL}">${FRONTEND_URL}</a>.</p>
         <p>API маршруты доступны по префиксу <code>/api/auth/*</code>.</p>
       </body>
     </html>
@@ -167,20 +182,24 @@ function decodeAccessToken(token) {
 }
 
 function setRefreshCookie(res, refreshToken) {
-  res.cookie(REFRESH_COOKIE, refreshToken, {
+  const cookieOptions = {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: COOKIE_SECURE,
+    sameSite: COOKIE_SAME_SITE,
+    domain: COOKIE_DOMAIN,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: "/api/auth",
-  });
+  };
+
+  res.cookie(REFRESH_COOKIE, refreshToken, cookieOptions);
 }
 
 function clearRefreshCookie(res) {
   res.clearCookie(REFRESH_COOKIE, {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: COOKIE_SECURE,
+    sameSite: COOKIE_SAME_SITE,
+    domain: COOKIE_DOMAIN,
     path: "/api/auth",
   });
 }

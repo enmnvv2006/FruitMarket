@@ -1,4 +1,5 @@
-const API_BASE = "/api/auth";
+const API_BASE =
+  (import.meta.env.VITE_AUTH_API_BASE_URL || "/api/auth").replace(/\/+$/, "");
 
 let accessToken = null;
 
