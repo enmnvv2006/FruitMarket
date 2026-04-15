@@ -12,12 +12,27 @@ import Navbar from "./components/Navbar";
 import ProductList from "./components/ProductList";
 import Cart from "./components/Cart";
 import AddProductForm from "./components/AddProductForm";
+import AuthPage from "./components/AuthPage";
 import { CartProvider, useCart } from "./context/CartContext";
 import { mockFruits } from "./data/mockFruits";
 import { mockSellers } from "./data/mockSellers";
 
+function RequireAuth({ children }) {
+  const { isAuthenticated } = useCart();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return children;
+}
+
 function DashboardHeader({ products }) {
   const { currentUser } = useCart();
+
+  if (!currentUser) {
+    return null;
+  }
 
   const stats = useMemo(() => {
     const inStock = products.reduce((sum, item) => sum + item.quantity, 0);
@@ -39,7 +54,7 @@ function DashboardHeader({ products }) {
             Каталог фруктов
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Роль: {currentUser.role === "seller" ? "Продавец" : "Покупатель"}
+            {currentUser.name}: {currentUser.role === "seller" ? "Продавец" : "Покупатель"}
           </p>
         </div>
 
@@ -106,7 +121,7 @@ function AppContent() {
     }))
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const { currentUser } = useCart();
+  const { currentUser, isAuthenticated } = useCart();
   const sellersById = useMemo(
     () => Object.fromEntries(mockSellers.map((seller) => [seller.id, seller])),
     []
@@ -128,7 +143,7 @@ function AppContent() {
   }, [products, searchQuery, sellersById]);
 
   const handleAddProduct = (newProduct) => {
-    if (!currentUser.sellerId) return;
+    if (!currentUser?.sellerId) return;
 
     setProducts((prev) => [
       ...prev,
@@ -162,7 +177,7 @@ function AppContent() {
     }
 
     const sellerProducts = products.filter((item) => item.sellerId === normalizedSellerId);
-    const isOwner = currentUser.role === "seller" && currentUser.sellerId === normalizedSellerId;
+    const isOwner = currentUser?.role === "seller" && currentUser?.sellerId === normalizedSellerId;
 
     return (
       <div className="space-y-5">
@@ -197,35 +212,55 @@ function AppContent() {
 
   return (
     <div className="min-h-screen pb-8">
-      <Navbar />
+      {isAuthenticated && <Navbar />}
 
       <main className="shell pt-5">
-        <DashboardHeader products={products} />
+        {isAuthenticated && <DashboardHeader products={products} />}
 
         <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+
           <Route
             path="/"
             element={
-              <HomePage
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                filteredProducts={filteredProducts}
-                sellersById={sellersById}
-              />
+              <RequireAuth>
+                <HomePage
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  filteredProducts={filteredProducts}
+                  sellersById={sellersById}
+                />
+              </RequireAuth>
             }
           />
-          <Route path="/cart" element={<Cart />} />
+          <Route
+            path="/cart"
+            element={
+              <RequireAuth>
+                <Cart />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/seller"
             element={
-              currentUser.role === "seller" ? (
-                <Navigate to={`/seller/${currentUser.sellerId}`} replace />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              <RequireAuth>
+                {currentUser?.role === "seller" ? (
+                  <Navigate to={`/seller/${currentUser.sellerId}`} replace />
+                ) : (
+                  <Navigate to="/" replace />
+                )}
+              </RequireAuth>
             }
           />
-          <Route path="/seller/:sellerId" element={<SellerProfilePage />} />
+          <Route
+            path="/seller/:sellerId"
+            element={
+              <RequireAuth>
+                <SellerProfilePage />
+              </RequireAuth>
+            }
+          />
           <Route
             path="*"
             element={
@@ -233,8 +268,8 @@ function AppContent() {
                 <h2 className="section-title">Страница не найдена</h2>
                 <p className="muted mt-2">
                   Вернуться в{" "}
-                  <Link to="/" className="font-semibold text-[var(--brand)]">
-                    каталог
+                  <Link to={isAuthenticated ? "/" : "/auth"} className="font-semibold text-[var(--brand)]">
+                    {isAuthenticated ? "каталог" : "авторизацию"}
                   </Link>
                   .
                 </p>

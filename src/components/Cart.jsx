@@ -1,16 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 
 export default function Cart() {
-  const { cart, cartTotal, updateQty, removeFromCart, clearCart } = useCart();
-  const [customerName, setCustomerName] = useState("");
+  const { cart, cartTotal, currentUser, updateQty, removeFromCart, clearCart } = useCart();
+  const [customerName, setCustomerName] = useState(currentUser?.name ?? "");
+
+  useEffect(() => {
+    setCustomerName(currentUser?.name ?? "");
+  }, [currentUser?.name]);
 
   const handleOrder = (e) => {
     e.preventDefault();
     if (!cart.length || !customerName.trim()) return;
 
     clearCart();
-    setCustomerName("");
+    setCustomerName(currentUser?.name ?? "");
     alert("Заказ оформлен");
   };
 
