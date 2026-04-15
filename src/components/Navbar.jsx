@@ -1,10 +1,9 @@
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { mockSellers } from "../data/mockSellers";
 
 export default function Navbar() {
-  const { cartCount, currentUser, setRole, setSellerId, logout } = useCart();
+  const { cartCount, currentUser, logout } = useCart();
 
   const navLinkClass = ({ isActive }) =>
     `rounded-xl px-3 py-2 text-sm font-semibold transition ${
@@ -33,50 +32,15 @@ export default function Navbar() {
           </NavLink>
           {currentUser.role === "seller" && (
             <NavLink to={`/seller/${currentUser.sellerId}`} className={navLinkClass}>
-              Профиль
+              Мой профиль
             </NavLink>
           )}
         </nav>
 
         <div className="glass-panel flex flex-wrap items-center gap-2 p-1">
           <span className="px-2 text-xs font-semibold text-[var(--muted)] sm:text-sm">
-            {currentUser.name}
+            {currentUser.name} ({currentUser.role === "seller" ? "Продавец" : "Покупатель"})
           </span>
-
-          <button
-            onClick={() => setRole("buyer")}
-            className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
-              currentUser.role === "buyer"
-                ? "bg-[var(--text)] text-white"
-                : "text-[var(--muted)] hover:bg-[var(--surface-soft)]"
-            }`}
-          >
-            Покупатель
-          </button>
-          <button
-            onClick={() => setRole("seller")}
-            className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
-              currentUser.role === "seller"
-                ? "bg-[var(--text)] text-white"
-                : "text-[var(--muted)] hover:bg-[var(--surface-soft)]"
-            }`}
-          >
-            Продавец
-          </button>
-
-          {currentUser.role === "seller" && (
-            <select
-              value={currentUser.sellerId ?? ""}
-              onChange={(event) => setSellerId(event.target.value)}
-              className="rounded-xl border border-[var(--line)] bg-[var(--surface)] px-2 py-2 text-sm text-[var(--text)] outline-none"
-            >
-              {mockSellers.map((seller) => (
-                <option key={seller.id} value={seller.id}>
-                  {seller.shopName}
-                </option>
-              ))}
-            </select>
-          )}
 
           <button onClick={logout} className="btn-danger px-3 py-2">
             Выйти

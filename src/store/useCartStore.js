@@ -1,20 +1,37 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { mockSellers } from "../data/mockSellers";
+import { sellerPasswords } from "../data/sellerPasswords";
 
 const defaultCurrentUser = null;
 
 const clampQty = (qty, maxQty) => Math.max(1, Math.min(qty, maxQty));
 const normalizeEmail = (email) => email.trim().toLowerCase();
 
-const buildUser = ({ id, name, email, password, role, sellerId }) => ({
+const buildBuyer = ({ id, name, email, password }) => ({
   id,
   name: name.trim(),
   email: normalizeEmail(email),
   password,
-  role,
-  sellerId: role === "seller" ? Number(sellerId ?? mockSellers[0]?.id ?? null) : null,
+  role: "buyer",
+  sellerId: null,
 });
+
+const buildSellerSession = (sellerId) => {
+  const normalizedSellerId = Number(sellerId);
+  const seller = mockSellers.find((item) => item.id === normalizedSellerId);
+
+  if (!seller) return null;
+
+  return {
+    id: `seller-${seller.id}`,
+    name: seller.name,
+    email: null,
+    password: null,
+    role: "seller",
+    sellerId: seller.id,
+  };
+};
 
 export const useCartStore = create(
   persist(
@@ -23,7 +40,7 @@ export const useCartStore = create(
       users: [],
       currentUser: defaultCurrentUser,
 
-      register: ({ name, email, password, role, sellerId }) => {
+      register: ({ name, email, password }) => {
         const normalizedEmail = normalizeEmail(email);
         const exists = get().users.some((user) => user.email === normalizedEmail);
 
@@ -31,13 +48,11 @@ export const useCartStore = create(
           return { ok: false, error: "Пользователь с таким email уже существует." };
         }
 
-        const newUser = buildUser({
+        const newUser = buildBuyer({
           id: Date.now(),
           name,
           email: normalizedEmail,
           password,
-          role,
-          sellerId,
         });
 
         set((state) => ({
@@ -49,7 +64,7 @@ export const useCartStore = create(
         return { ok: true, user: newUser };
       },
 
-      login: ({ email, password }) => {
+      loginBuyer: ({ email, password }) => {
         const normalizedEmail = normalizeEmail(email);
         const matchedUser = get().users.find(
           (user) => user.email === normalizedEmail && user.password === password
@@ -63,54 +78,25 @@ export const useCartStore = create(
         return { ok: true, user: matchedUser };
       },
 
+      loginSeller: ({ sellerId, password }) => {
+        const normalizedSellerId = Number(sellerId);
+        const validPassword = sellerPasswords[normalizedSellerId];
+
+        if (!validPassword || validPassword !== password) {
+          return { ok: false, error: "Неверный пароль продавца." };
+        }
+
+        const sellerSession = buildSellerSession(normalizedSellerId);
+
+        if (!sellerSession) {
+          return { ok: false, error: "Продавец не найден." };
+        }
+
+        set({ currentUser: sellerSession, cart: [] });
+        return { ok: true, user: sellerSession };
+      },
+
       logout: () => set({ currentUser: null, cart: [] }),
-
-      setRole: (role) =>
-        set((state) => {
-          if (!state.currentUser) return state;
-
-          return {
-            currentUser: {
-              ...state.currentUser,
-              role,
-              sellerId: role === "seller" ? state.currentUser.sellerId ?? mockSellers[0]?.id ?? null : null,
-            },
-            users: state.users.map((user) =>
-              user.id === state.currentUser.id
-                ? {
-                    ...user,
-                    role,
-                    sellerId:
-                      role === "seller"
-                        ? state.currentUser.sellerId ?? mockSellers[0]?.id ?? null
-                        : null,
-                  }
-                : user
-            ),
-          };
-        }),
-
-      setSellerId: (sellerId) =>
-        set((state) => {
-          if (!state.currentUser) return state;
-
-          const normalizedSellerId = Number(sellerId);
-
-          return {
-            currentUser: {
-              ...state.currentUser,
-              sellerId: normalizedSellerId,
-            },
-            users: state.users.map((user) =>
-              user.id === state.currentUser.id
-                ? {
-                    ...user,
-                    sellerId: normalizedSellerId,
-                  }
-                : user
-            ),
-          };
-        }),
 
       addToCart: (product) =>
         set((state) => {
@@ -153,16 +139,25 @@ export const useCartStore = create(
         currentUser: state.currentUser,
       }),
       merge: (persistedState, currentState) => {
-        const persistedCurrentUser = persistedState?.currentUser;
+        const persistedUsers = (persistedState?.users ?? []).filter(
+          (user) => user?.role === "buyer" && user?.email
+        );
 
-        // Legacy sessions (without email) are ignored to enforce real auth flow.
-        const normalizedCurrentUser =
-          persistedCurrentUser && persistedCurrentUser.email ? persistedCurrentUser : null;
+        const persistedCurrentUser = persistedState?.currentUser;
+        let normalizedCurrentUser = null;
+
+        if (persistedCurrentUser?.role === "buyer" && persistedCurrentUser?.email) {
+          normalizedCurrentUser = persistedCurrentUser;
+        }
+
+        if (persistedCurrentUser?.role === "seller" && persistedCurrentUser?.sellerId) {
+          normalizedCurrentUser = buildSellerSession(persistedCurrentUser.sellerId);
+        }
 
         return {
           ...currentState,
           ...persistedState,
-          users: persistedState?.users ?? [],
+          users: persistedUsers,
           currentUser: normalizedCurrentUser ?? defaultCurrentUser,
         };
       },

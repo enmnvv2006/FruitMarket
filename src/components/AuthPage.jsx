@@ -8,25 +8,30 @@ const initialRegisterState = {
   email: "",
   password: "",
   confirmPassword: "",
-  role: "buyer",
-  sellerId: mockSellers[0]?.id ?? "",
 };
 
-const initialLoginState = {
+const initialBuyerLoginState = {
   email: "",
+  password: "",
+};
+
+const initialSellerLoginState = {
+  sellerId: mockSellers[0]?.id ?? "",
   password: "",
 };
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { currentUser, login, register } = useCart();
+  const { currentUser, loginBuyer, loginSeller, register } = useCart();
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [loginType, setLoginType] = useState("buyer");
   const [error, setError] = useState("");
-  const [loginForm, setLoginForm] = useState(initialLoginState);
+  const [buyerLoginForm, setBuyerLoginForm] = useState(initialBuyerLoginState);
+  const [sellerLoginForm, setSellerLoginForm] = useState(initialSellerLoginState);
   const [registerForm, setRegisterForm] = useState(initialRegisterState);
 
   const title = useMemo(
-    () => (isLoginMode ? "Вход в аккаунт" : "Регистрация аккаунта"),
+    () => (isLoginMode ? "Вход в аккаунт" : "Регистрация покупателя"),
     [isLoginMode]
   );
 
@@ -34,11 +39,25 @@ export default function AuthPage() {
     return <Navigate to="/" replace />;
   }
 
-  const handleLoginSubmit = (event) => {
+  const handleBuyerLoginSubmit = (event) => {
     event.preventDefault();
     setError("");
 
-    const result = login(loginForm);
+    const result = loginBuyer(buyerLoginForm);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    navigate("/", { replace: true });
+  };
+
+  const handleSellerLoginSubmit = (event) => {
+    event.preventDefault();
+    setError("");
+
+    const result = loginSeller(sellerLoginForm);
 
     if (!result.ok) {
       setError(result.error);
@@ -66,8 +85,6 @@ export default function AuthPage() {
       name: registerForm.name,
       email: registerForm.email,
       password: registerForm.password,
-      role: registerForm.role,
-      sellerId: registerForm.sellerId,
     });
 
     if (!result.ok) {
@@ -112,36 +129,99 @@ export default function AuthPage() {
                 !isLoginMode ? "bg-[var(--text)] text-white" : "text-[var(--muted)]"
               }`}
             >
-              Зарегистрироваться
+              Регистрация
             </button>
           </div>
 
           {isLoginMode ? (
-            <form onSubmit={handleLoginSubmit} className="mt-5 space-y-3">
-              <input
-                type="email"
-                placeholder="Email"
-                value={loginForm.email}
-                onChange={(event) =>
-                  setLoginForm((prev) => ({ ...prev, email: event.target.value }))
-                }
-                className="input-base"
-                required
-              />
-              <input
-                type="password"
-                placeholder="Пароль"
-                value={loginForm.password}
-                onChange={(event) =>
-                  setLoginForm((prev) => ({ ...prev, password: event.target.value }))
-                }
-                className="input-base"
-                required
-              />
-              <button type="submit" className="btn-primary w-full">
-                Войти
-              </button>
-            </form>
+            <>
+              <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-[var(--surface-soft)] p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginType("buyer");
+                    setError("");
+                  }}
+                  className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                    loginType === "buyer" ? "bg-[var(--text)] text-white" : "text-[var(--muted)]"
+                  }`}
+                >
+                  Покупатель
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginType("seller");
+                    setError("");
+                  }}
+                  className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                    loginType === "seller" ? "bg-[var(--text)] text-white" : "text-[var(--muted)]"
+                  }`}
+                >
+                  Продавец
+                </button>
+              </div>
+
+              {loginType === "buyer" ? (
+                <form onSubmit={handleBuyerLoginSubmit} className="mt-5 space-y-3">
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={buyerLoginForm.email}
+                    onChange={(event) =>
+                      setBuyerLoginForm((prev) => ({ ...prev, email: event.target.value }))
+                    }
+                    className="input-base"
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Пароль"
+                    value={buyerLoginForm.password}
+                    onChange={(event) =>
+                      setBuyerLoginForm((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                    className="input-base"
+                    required
+                  />
+                  <button type="submit" className="btn-primary w-full">
+                    Войти как покупатель
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleSellerLoginSubmit} className="mt-5 space-y-3">
+                  <select
+                    value={sellerLoginForm.sellerId}
+                    onChange={(event) =>
+                      setSellerLoginForm((prev) => ({
+                        ...prev,
+                        sellerId: Number(event.target.value),
+                      }))
+                    }
+                    className="input-base"
+                  >
+                    {mockSellers.map((seller) => (
+                      <option key={seller.id} value={seller.id}>
+                        {seller.shopName}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="password"
+                    placeholder="Пароль продавца"
+                    value={sellerLoginForm.password}
+                    onChange={(event) =>
+                      setSellerLoginForm((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                    className="input-base"
+                    required
+                  />
+                  <button type="submit" className="btn-primary w-full">
+                    Войти как продавец
+                  </button>
+                </form>
+              )}
+            </>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="mt-5 space-y-3">
               <input
@@ -185,50 +265,14 @@ export default function AuthPage() {
                 required
               />
 
-              <div className="grid grid-cols-2 gap-2 rounded-xl bg-[var(--surface-soft)] p-1">
-                <button
-                  type="button"
-                  onClick={() => setRegisterForm((prev) => ({ ...prev, role: "buyer" }))}
-                  className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                    registerForm.role === "buyer"
-                      ? "bg-[var(--text)] text-white"
-                      : "text-[var(--muted)]"
-                  }`}
-                >
-                  Покупатель
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRegisterForm((prev) => ({ ...prev, role: "seller" }))}
-                  className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                    registerForm.role === "seller"
-                      ? "bg-[var(--text)] text-white"
-                      : "text-[var(--muted)]"
-                  }`}
-                >
-                  Продавец
-                </button>
-              </div>
-
-              {registerForm.role === "seller" && (
-                <select
-                  value={registerForm.sellerId}
-                  onChange={(event) =>
-                    setRegisterForm((prev) => ({ ...prev, sellerId: Number(event.target.value) }))
-                  }
-                  className="input-base"
-                >
-                  {mockSellers.map((seller) => (
-                    <option key={seller.id} value={seller.id}>
-                      {seller.shopName}
-                    </option>
-                  ))}
-                </select>
-              )}
-
               <button type="submit" className="btn-primary w-full">
-                Создать аккаунт
+                Создать аккаунт покупателя
               </button>
+
+              <p className="text-xs text-[var(--muted)]">
+                Аккаунты продавцов создаются заранее, вход для них только через вкладку
+                «Продавец» и отдельный пароль.
+              </p>
             </form>
           )}
 

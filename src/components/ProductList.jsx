@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 const FALLBACK_IMAGE =
@@ -32,6 +33,7 @@ export default function ProductList({
     <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {products.map((product) => {
         const outOfStock = product.quantity <= 0;
+        const seller = sellersById[product.sellerId];
 
         return (
           <article
@@ -81,10 +83,13 @@ export default function ProductList({
               <div className="flex items-center justify-between border-t border-[var(--line)] pt-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">за 1 кг</p>
-                  {!isSellerView && sellersById[product.sellerId] && (
-                    <p className="mt-1 text-xs text-[var(--muted)]">
-                      Продавец: {sellersById[product.sellerId].shopName}
-                    </p>
+                  {!isSellerView && seller && (
+                    <Link
+                      to={`/seller/${product.sellerId}`}
+                      className="mt-1 inline-block text-xs font-semibold text-[var(--brand)] hover:underline"
+                    >
+                      Продавец: {seller.shopName}
+                    </Link>
                   )}
                 </div>
 

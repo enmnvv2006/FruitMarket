@@ -9,10 +9,9 @@ export function useCart() {
   const users = useCartStore((state) => state.users);
   const currentUser = useCartStore((state) => state.currentUser);
   const register = useCartStore((state) => state.register);
-  const login = useCartStore((state) => state.login);
+  const loginBuyer = useCartStore((state) => state.loginBuyer);
+  const loginSeller = useCartStore((state) => state.loginSeller);
   const logout = useCartStore((state) => state.logout);
-  const setRole = useCartStore((state) => state.setRole);
-  const setSellerId = useCartStore((state) => state.setSellerId);
   const addToCart = useCartStore((state) => state.addToCart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const updateQty = useCartStore((state) => state.updateQty);
@@ -29,10 +28,9 @@ export function useCart() {
     currentUser,
     isAuthenticated: Boolean(currentUser),
     register,
-    login,
+    loginBuyer,
+    loginSeller,
     logout,
-    setRole,
-    setSellerId,
     addToCart,
     removeFromCart,
     updateQty,
