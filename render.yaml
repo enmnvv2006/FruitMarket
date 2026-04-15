@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: fruitmarket-auth
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm ci
+    startCommand: npm run server
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: https://enmnvv2006.github.io/FruitMarket/
+      - key: CORS_ORIGINS
+        value: https://enmnvv2006.github.io,http://localhost:3000
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: AUTH_DB_PATH
+        value: /var/data/auth-db.json
+      - key: AUTH_DB_EXAMPLE_PATH
+        value: /opt/render/project/src/server/data/auth-db.example.json
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+    disks:
+      - name: auth-data
+        mountPath: /var/data
+        sizeGB: 1

@@ -12,11 +12,13 @@ import { sellerAccounts } from "./data/sellerAccounts.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_PATH = path.join(__dirname, "data", "auth-db.json");
-const DB_EXAMPLE_PATH = path.join(__dirname, "data", "auth-db.example.json");
+const DB_PATH =
+  process.env.AUTH_DB_PATH || path.join(__dirname, "data", "auth-db.json");
+const DB_EXAMPLE_PATH =
+  process.env.AUTH_DB_EXAMPLE_PATH || path.join(__dirname, "data", "auth-db.example.json");
 
 const app = express();
-const PORT = Number(process.env.AUTH_SERVER_PORT || 4000);
+const PORT = Number(process.env.PORT || process.env.AUTH_SERVER_PORT || 4000);
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "fruit-market-access-secret";
