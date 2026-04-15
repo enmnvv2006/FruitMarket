@@ -20,14 +20,20 @@ const initialSellerLoginState = {
   password: "",
 };
 
+const initialAdminLoginState = {
+  username: "",
+  password: "",
+};
+
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { currentUser, loginBuyer, loginSeller, register } = useCart();
+  const { currentUser, loginBuyer, loginSeller, loginAdmin, register, authLoading } = useCart();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [loginType, setLoginType] = useState("buyer");
   const [error, setError] = useState("");
   const [buyerLoginForm, setBuyerLoginForm] = useState(initialBuyerLoginState);
   const [sellerLoginForm, setSellerLoginForm] = useState(initialSellerLoginState);
+  const [adminLoginForm, setAdminLoginForm] = useState(initialAdminLoginState);
   const [registerForm, setRegisterForm] = useState(initialRegisterState);
 
   const title = useMemo(
@@ -39,11 +45,11 @@ export default function AuthPage() {
     return <Navigate to="/" replace />;
   }
 
-  const handleBuyerLoginSubmit = (event) => {
+  const handleBuyerLoginSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
-    const result = loginBuyer(buyerLoginForm);
+    const result = await loginBuyer(buyerLoginForm);
 
     if (!result.ok) {
       setError(result.error);
@@ -53,11 +59,11 @@ export default function AuthPage() {
     navigate("/", { replace: true });
   };
 
-  const handleSellerLoginSubmit = (event) => {
+  const handleSellerLoginSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
-    const result = loginSeller(sellerLoginForm);
+    const result = await loginSeller(sellerLoginForm);
 
     if (!result.ok) {
       setError(result.error);
@@ -67,7 +73,21 @@ export default function AuthPage() {
     navigate("/", { replace: true });
   };
 
-  const handleRegisterSubmit = (event) => {
+  const handleAdminLoginSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    const result = await loginAdmin(adminLoginForm);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    navigate("/admin", { replace: true });
+  };
+
+  const handleRegisterSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
@@ -81,7 +101,7 @@ export default function AuthPage() {
       return;
     }
 
-    const result = register({
+    const result = await register({
       name: registerForm.name,
       email: registerForm.email,
       password: registerForm.password,
@@ -135,7 +155,7 @@ export default function AuthPage() {
 
           {isLoginMode ? (
             <>
-              <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-[var(--surface-soft)] p-1">
+              <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-[var(--surface-soft)] p-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -160,9 +180,21 @@ export default function AuthPage() {
                 >
                   Продавец
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginType("admin");
+                    setError("");
+                  }}
+                  className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                    loginType === "admin" ? "bg-[var(--text)] text-white" : "text-[var(--muted)]"
+                  }`}
+                >
+                  Админ
+                </button>
               </div>
 
-              {loginType === "buyer" ? (
+              {loginType === "buyer" && (
                 <form onSubmit={handleBuyerLoginSubmit} className="mt-5 space-y-3">
                   <input
                     type="email"
@@ -184,11 +216,13 @@ export default function AuthPage() {
                     className="input-base"
                     required
                   />
-                  <button type="submit" className="btn-primary w-full">
+                  <button type="submit" className="btn-primary w-full" disabled={authLoading}>
                     Войти как покупатель
                   </button>
                 </form>
-              ) : (
+              )}
+
+              {loginType === "seller" && (
                 <form onSubmit={handleSellerLoginSubmit} className="mt-5 space-y-3">
                   <select
                     value={sellerLoginForm.sellerId}
@@ -216,8 +250,36 @@ export default function AuthPage() {
                     className="input-base"
                     required
                   />
-                  <button type="submit" className="btn-primary w-full">
+                  <button type="submit" className="btn-primary w-full" disabled={authLoading}>
                     Войти как продавец
+                  </button>
+                </form>
+              )}
+
+              {loginType === "admin" && (
+                <form onSubmit={handleAdminLoginSubmit} className="mt-5 space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Логин администратора"
+                    value={adminLoginForm.username}
+                    onChange={(event) =>
+                      setAdminLoginForm((prev) => ({ ...prev, username: event.target.value }))
+                    }
+                    className="input-base"
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Пароль администратора"
+                    value={adminLoginForm.password}
+                    onChange={(event) =>
+                      setAdminLoginForm((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                    className="input-base"
+                    required
+                  />
+                  <button type="submit" className="btn-primary w-full" disabled={authLoading}>
+                    Войти в админ-панель
                   </button>
                 </form>
               )}
@@ -265,14 +327,9 @@ export default function AuthPage() {
                 required
               />
 
-              <button type="submit" className="btn-primary w-full">
+              <button type="submit" className="btn-primary w-full" disabled={authLoading}>
                 Создать аккаунт покупателя
               </button>
-
-              <p className="text-xs text-[var(--muted)]">
-                Аккаунты продавцов создаются заранее, вход для них только через вкладку
-                «Продавец» и отдельный пароль.
-              </p>
             </form>
           )}
 

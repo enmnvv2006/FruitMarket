@@ -1,102 +1,130 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { mockSellers } from "../data/mockSellers";
-import { sellerPasswords } from "../data/sellerPasswords";
-
-const defaultCurrentUser = null;
+import {
+  clearAccessToken,
+  loginAdmin as loginAdminRequest,
+  loginBuyer as loginBuyerRequest,
+  loginSeller as loginSellerRequest,
+  logoutSession,
+  refreshSession,
+  registerBuyer,
+} from "../api/authApi";
 
 const clampQty = (qty, maxQty) => Math.max(1, Math.min(qty, maxQty));
-const normalizeEmail = (email) => email.trim().toLowerCase();
-
-const buildBuyer = ({ id, name, email, password }) => ({
-  id,
-  name: name.trim(),
-  email: normalizeEmail(email),
-  password,
-  role: "buyer",
-  sellerId: null,
-});
-
-const buildSellerSession = (sellerId) => {
-  const normalizedSellerId = Number(sellerId);
-  const seller = mockSellers.find((item) => item.id === normalizedSellerId);
-
-  if (!seller) return null;
-
-  return {
-    id: `seller-${seller.id}`,
-    name: seller.name,
-    email: null,
-    password: null,
-    role: "seller",
-    sellerId: seller.id,
-  };
-};
 
 export const useCartStore = create(
   persist(
     (set, get) => ({
       cart: [],
       users: [],
-      currentUser: defaultCurrentUser,
+      currentUser: null,
+      isAuthChecked: false,
+      authLoading: false,
 
-      register: ({ name, email, password }) => {
-        const normalizedEmail = normalizeEmail(email);
-        const exists = get().users.some((user) => user.email === normalizedEmail);
-
-        if (exists) {
-          return { ok: false, error: "Пользователь с таким email уже существует." };
+      initializeAuth: async () => {
+        if (get().isAuthChecked) {
+          return;
         }
 
-        const newUser = buildBuyer({
-          id: Date.now(),
-          name,
-          email: normalizedEmail,
-          password,
-        });
-
-        set((state) => ({
-          users: [...state.users, newUser],
-          currentUser: newUser,
-          cart: [],
-        }));
-
-        return { ok: true, user: newUser };
+        try {
+          const payload = await refreshSession();
+          set({ currentUser: payload.user, isAuthChecked: true });
+        } catch {
+          clearAccessToken();
+          set({ currentUser: null, isAuthChecked: true });
+        }
       },
 
-      loginBuyer: ({ email, password }) => {
-        const normalizedEmail = normalizeEmail(email);
-        const matchedUser = get().users.find(
-          (user) => user.email === normalizedEmail && user.password === password
-        );
+      register: async ({ name, email, password }) => {
+        set({ authLoading: true });
 
-        if (!matchedUser) {
-          return { ok: false, error: "Неверный email или пароль." };
+        try {
+          const payload = await registerBuyer({ name, email, password });
+
+          set((state) => ({
+            currentUser: payload.user,
+            users: state.users.some((item) => item.email === payload.user.email)
+              ? state.users
+              : [...state.users, payload.user],
+            cart: [],
+            authLoading: false,
+            isAuthChecked: true,
+          }));
+
+          return { ok: true, user: payload.user };
+        } catch (error) {
+          set({ authLoading: false, isAuthChecked: true });
+          return { ok: false, error: error.message };
         }
-
-        set({ currentUser: matchedUser, cart: [] });
-        return { ok: true, user: matchedUser };
       },
 
-      loginSeller: ({ sellerId, password }) => {
-        const normalizedSellerId = Number(sellerId);
-        const validPassword = sellerPasswords[normalizedSellerId];
+      loginBuyer: async ({ email, password }) => {
+        set({ authLoading: true });
 
-        if (!validPassword || validPassword !== password) {
-          return { ok: false, error: "Неверный пароль продавца." };
+        try {
+          const payload = await loginBuyerRequest({ email, password });
+
+          set((state) => ({
+            currentUser: payload.user,
+            users: state.users.some((item) => item.email === payload.user.email)
+              ? state.users
+              : [...state.users, payload.user],
+            cart: [],
+            authLoading: false,
+            isAuthChecked: true,
+          }));
+
+          return { ok: true, user: payload.user };
+        } catch (error) {
+          set({ authLoading: false, isAuthChecked: true });
+          return { ok: false, error: error.message };
         }
-
-        const sellerSession = buildSellerSession(normalizedSellerId);
-
-        if (!sellerSession) {
-          return { ok: false, error: "Продавец не найден." };
-        }
-
-        set({ currentUser: sellerSession, cart: [] });
-        return { ok: true, user: sellerSession };
       },
 
-      logout: () => set({ currentUser: null, cart: [] }),
+      loginSeller: async ({ sellerId, password }) => {
+        set({ authLoading: true });
+
+        try {
+          const payload = await loginSellerRequest({ sellerId, password });
+
+          set({
+            currentUser: payload.user,
+            cart: [],
+            authLoading: false,
+            isAuthChecked: true,
+          });
+
+          return { ok: true, user: payload.user };
+        } catch (error) {
+          set({ authLoading: false, isAuthChecked: true });
+          return { ok: false, error: error.message };
+        }
+      },
+
+      loginAdmin: async ({ username, password }) => {
+        set({ authLoading: true });
+
+        try {
+          const payload = await loginAdminRequest({ username, password });
+
+          set({
+            currentUser: payload.user,
+            cart: [],
+            authLoading: false,
+            isAuthChecked: true,
+          });
+
+          return { ok: true, user: payload.user };
+        } catch (error) {
+          set({ authLoading: false, isAuthChecked: true });
+          return { ok: false, error: error.message };
+        }
+      },
+
+      logout: async () => {
+        await logoutSession();
+        set({ currentUser: null, cart: [], isAuthChecked: true });
+      },
 
       addToCart: (product) =>
         set((state) => {
@@ -136,31 +164,15 @@ export const useCartStore = create(
       partialize: (state) => ({
         cart: state.cart,
         users: state.users,
-        currentUser: state.currentUser,
       }),
-      merge: (persistedState, currentState) => {
-        const persistedUsers = (persistedState?.users ?? []).filter(
-          (user) => user?.role === "buyer" && user?.email
-        );
-
-        const persistedCurrentUser = persistedState?.currentUser;
-        let normalizedCurrentUser = null;
-
-        if (persistedCurrentUser?.role === "buyer" && persistedCurrentUser?.email) {
-          normalizedCurrentUser = persistedCurrentUser;
-        }
-
-        if (persistedCurrentUser?.role === "seller" && persistedCurrentUser?.sellerId) {
-          normalizedCurrentUser = buildSellerSession(persistedCurrentUser.sellerId);
-        }
-
-        return {
-          ...currentState,
-          ...persistedState,
-          users: persistedUsers,
-          currentUser: normalizedCurrentUser ?? defaultCurrentUser,
-        };
-      },
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        cart: persistedState?.cart ?? [],
+        users: persistedState?.users ?? [],
+        currentUser: null,
+        isAuthChecked: false,
+        authLoading: false,
+      }),
     }
   )
 );

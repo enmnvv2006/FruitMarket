@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const initialState = {
   name: "",
@@ -9,8 +9,34 @@ const initialState = {
   isLabTested: false,
 };
 
-export default function AddProductForm({ onAddProduct }) {
-  const [formData, setFormData] = useState(initialState);
+const toFormState = (product) => {
+  if (!product) return initialState;
+
+  return {
+    name: product.name ?? "",
+    price: String(product.price ?? ""),
+    description: product.description ?? "",
+    image: product.image ?? "",
+    quantity: String(product.quantity ?? ""),
+    isLabTested: Boolean(product.isLabTested),
+  };
+};
+
+export default function AddProductForm({
+  onAddProduct,
+  initialProduct,
+  onCancel,
+  submitText,
+  title,
+  description,
+}) {
+  const [formData, setFormData] = useState(() => toFormState(initialProduct));
+
+  useEffect(() => {
+    setFormData(toFormState(initialProduct));
+  }, [initialProduct]);
+
+  const isEditMode = useMemo(() => Boolean(initialProduct), [initialProduct]);
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -28,14 +54,22 @@ export default function AddProductForm({ onAddProduct }) {
     }
 
     onAddProduct(formData);
-    setFormData(initialState);
+
+    if (!isEditMode) {
+      setFormData(initialState);
+    }
   };
 
   return (
     <section className="glass-panel p-5 sm:p-6">
       <div className="mb-4">
-        <h2 className="section-title">Добавить новый фрукт</h2>
-        <p className="muted mt-1">Заполните данные товара и опубликуйте его в вашем профиле.</p>
+        <h2 className="section-title">{title ?? (isEditMode ? "Редактировать товар" : "Добавить новый фрукт")}</h2>
+        <p className="muted mt-1">
+          {description ??
+            (isEditMode
+              ? "Измените поля и сохраните обновлённую карточку товара."
+              : "Заполните данные товара и опубликуйте его в вашем профиле.")}
+        </p>
       </div>
 
       <form onSubmit={onSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -94,9 +128,16 @@ export default function AddProductForm({ onAddProduct }) {
           Прошёл лабораторную проверку
         </label>
 
-        <button type="submit" className="btn-primary md:col-span-2">
-          Добавить товар
-        </button>
+        <div className="md:col-span-2 flex flex-wrap gap-2">
+          <button type="submit" className="btn-primary">
+            {submitText ?? (isEditMode ? "Сохранить изменения" : "Добавить товар")}
+          </button>
+          {isEditMode && (
+            <button type="button" onClick={onCancel} className="btn-secondary">
+              Отмена
+            </button>
+          )}
+        </div>
       </form>
     </section>
   );

@@ -16,6 +16,13 @@ export default function Navbar() {
     return null;
   }
 
+  const roleLabel =
+    currentUser.role === "admin"
+      ? "Администратор"
+      : currentUser.role === "seller"
+        ? "Продавец"
+        : "Покупатель";
+
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[rgba(246,247,242,0.88)] backdrop-blur-md">
       <div className="shell flex flex-wrap items-center justify-between gap-3 py-3">
@@ -35,11 +42,16 @@ export default function Navbar() {
               Мой профиль
             </NavLink>
           )}
+          {currentUser.role === "admin" && (
+            <NavLink to="/admin" className={navLinkClass}>
+              Админ-панель
+            </NavLink>
+          )}
         </nav>
 
         <div className="glass-panel flex flex-wrap items-center gap-2 p-1">
           <span className="px-2 text-xs font-semibold text-[var(--muted)] sm:text-sm">
-            {currentUser.name} ({currentUser.role === "seller" ? "Продавец" : "Покупатель"})
+            {currentUser.name} ({roleLabel})
           </span>
 
           <button onClick={logout} className="btn-danger px-3 py-2">

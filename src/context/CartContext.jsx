@@ -8,9 +8,13 @@ export function useCart() {
   const cart = useCartStore((state) => state.cart);
   const users = useCartStore((state) => state.users);
   const currentUser = useCartStore((state) => state.currentUser);
+  const isAuthChecked = useCartStore((state) => state.isAuthChecked);
+  const authLoading = useCartStore((state) => state.authLoading);
+  const initializeAuth = useCartStore((state) => state.initializeAuth);
   const register = useCartStore((state) => state.register);
   const loginBuyer = useCartStore((state) => state.loginBuyer);
   const loginSeller = useCartStore((state) => state.loginSeller);
+  const loginAdmin = useCartStore((state) => state.loginAdmin);
   const logout = useCartStore((state) => state.logout);
   const addToCart = useCartStore((state) => state.addToCart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
@@ -27,9 +31,13 @@ export function useCart() {
     cartTotal,
     currentUser,
     isAuthenticated: Boolean(currentUser),
+    isAuthChecked,
+    authLoading,
+    initializeAuth,
     register,
     loginBuyer,
     loginSeller,
+    loginAdmin,
     logout,
     addToCart,
     removeFromCart,

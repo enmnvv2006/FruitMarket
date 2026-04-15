@@ -9,6 +9,7 @@ export default function ProductList({
   products,
   sellersById = {},
   onDeleteProduct,
+  onEditProduct,
   isSellerView = false,
   emptyTitle = "Пока нет товаров",
   emptyDescription,
@@ -94,9 +95,14 @@ export default function ProductList({
                 </div>
 
                 {isSellerView ? (
-                  <button onClick={() => onDeleteProduct?.(product.id)} className="btn-danger">
-                    Удалить
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={() => onEditProduct?.(product)} className="btn-secondary">
+                      Редактировать
+                    </button>
+                    <button onClick={() => onDeleteProduct?.(product.id)} className="btn-danger">
+                      Удалить
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => addToCart(product)}

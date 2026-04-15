@@ -7,12 +7,13 @@ import {
   Routes,
   useParams,
 } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "./components/Navbar";
 import ProductList from "./components/ProductList";
 import Cart from "./components/Cart";
 import AddProductForm from "./components/AddProductForm";
 import AuthPage from "./components/AuthPage";
+import AdminPanel from "./components/AdminPanel";
 import { CartProvider, useCart } from "./context/CartContext";
 import { mockFruits } from "./data/mockFruits";
 import { mockSellers } from "./data/mockSellers";
@@ -22,6 +23,20 @@ function RequireAuth({ children }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
+  }
+
+  return children;
+}
+
+function RequireAdmin({ children }) {
+  const { currentUser } = useCart();
+
+  if (!currentUser) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (currentUser.role !== "admin") {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -43,6 +58,13 @@ function DashboardHeader({ products }) {
     return { items: products.length, inStock, avgPrice };
   }, [products]);
 
+  const roleLabel =
+    currentUser.role === "admin"
+      ? "Администратор"
+      : currentUser.role === "seller"
+        ? "Продавец"
+        : "Покупатель";
+
   return (
     <section className="glass-panel mb-6 overflow-hidden p-5 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -54,7 +76,7 @@ function DashboardHeader({ products }) {
             Каталог фруктов
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            {currentUser.name}: {currentUser.role === "seller" ? "Продавец" : "Покупатель"}
+            {currentUser.name}: {roleLabel}
           </p>
         </div>
 
@@ -121,7 +143,7 @@ function AppContent() {
     }))
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const { currentUser, isAuthenticated } = useCart();
+  const { currentUser, isAuthenticated, isAuthChecked, initializeAuth } = useCart();
   const sellersById = useMemo(
     () => Object.fromEntries(mockSellers.map((seller) => [seller.id, seller])),
     []
@@ -141,6 +163,10 @@ function AppContent() {
       return searchableText.includes(normalizedQuery);
     });
   }, [products, searchQuery, sellersById]);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   const handleAddProduct = (newProduct) => {
     if (!currentUser?.sellerId) return;
@@ -166,6 +192,7 @@ function AppContent() {
     const { sellerId } = useParams();
     const normalizedSellerId = Number(sellerId);
     const seller = sellersById[normalizedSellerId];
+    const [editingProductId, setEditingProductId] = useState(null);
 
     if (!seller) {
       return (
@@ -178,6 +205,35 @@ function AppContent() {
 
     const sellerProducts = products.filter((item) => item.sellerId === normalizedSellerId);
     const isOwner = currentUser?.role === "seller" && currentUser?.sellerId === normalizedSellerId;
+
+    const editingProduct = sellerProducts.find((item) => item.id === editingProductId) ?? null;
+
+    const handleUpdateProduct = (updatedProduct) => {
+      if (!editingProductId || !isOwner) return;
+
+      setProducts((prev) =>
+        prev.map((item) =>
+          item.id === editingProductId
+            ? {
+                ...item,
+                ...updatedProduct,
+                price: Number(updatedProduct.price),
+                quantity: Number(updatedProduct.quantity),
+                isLabTested: Boolean(updatedProduct.isLabTested),
+              }
+            : item
+        )
+      );
+
+      setEditingProductId(null);
+    };
+
+    const handleDeleteAndResetEdit = (id) => {
+      if (editingProductId === id) {
+        setEditingProductId(null);
+      }
+      handleDeleteProduct(id);
+    };
 
     return (
       <div className="space-y-5">
@@ -198,14 +254,42 @@ function AppContent() {
           </div>
         </section>
 
-        {isOwner && <AddProductForm onAddProduct={handleAddProduct} />}
+        {isOwner && (
+          <>
+            <AddProductForm onAddProduct={handleAddProduct} />
+            {editingProduct && (
+              <AddProductForm
+                initialProduct={editingProduct}
+                onAddProduct={handleUpdateProduct}
+                onCancel={() => setEditingProductId(null)}
+                title="Редактирование товара"
+                description="Измените данные товара и сохраните обновления."
+                submitText="Сохранить изменения"
+              />
+            )}
+          </>
+        )}
 
         <ProductList
           products={sellerProducts}
           sellersById={sellersById}
-          onDeleteProduct={isOwner ? handleDeleteProduct : undefined}
+          onDeleteProduct={isOwner ? handleDeleteAndResetEdit : undefined}
+          onEditProduct={isOwner ? (product) => setEditingProductId(product.id) : undefined}
           isSellerView={isOwner}
         />
+      </div>
+    );
+  }
+
+  if (!isAuthChecked) {
+    return (
+      <div className="min-h-screen pb-8">
+        <main className="shell pt-10">
+          <section className="glass-panel p-8 text-center">
+            <h2 className="section-title">Проверка сессии...</h2>
+            <p className="muted mt-2">Подождите, выполняется авторизация.</p>
+          </section>
+        </main>
       </div>
     );
   }
@@ -259,6 +343,14 @@ function AppContent() {
               <RequireAuth>
                 <SellerProfilePage />
               </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RequireAdmin>
+                <AdminPanel products={products} sellersById={sellersById} />
+              </RequireAdmin>
             }
           />
           <Route
