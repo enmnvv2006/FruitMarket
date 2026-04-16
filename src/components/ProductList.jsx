@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { CATEGORY_LABELS } from "../data/productCategories";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=1200&q=80";
@@ -73,7 +74,12 @@ export default function ProductList({
 
             <div className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-lg font-extrabold text-[var(--text)]">{product.name}</h3>
+                <div>
+                  <h3 className="text-lg font-extrabold text-[var(--text)]">{product.name}</h3>
+                  <p className="text-xs text-[var(--muted)]">
+                    {CATEGORY_LABELS[product.category] ?? CATEGORY_LABELS.fruits}
+                  </p>
+                </div>
                 <p className="rounded-lg bg-[var(--surface-soft)] px-2 py-1 text-sm font-bold text-[var(--brand-strong)]">
                   {product.price} сом
                 </p>
@@ -96,6 +102,9 @@ export default function ProductList({
 
                 {isSellerView ? (
                   <div className="flex gap-2">
+                    <Link to={`/product/${product.id}`} className="btn-secondary">
+                      Подробнее
+                    </Link>
                     <button onClick={() => onEditProduct?.(product)} className="btn-secondary">
                       Редактировать
                     </button>
@@ -104,13 +113,18 @@ export default function ProductList({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => addToCart(product)}
-                    disabled={outOfStock}
-                    className="btn-primary"
-                  >
-                    В корзину
-                  </button>
+                  <div className="flex gap-2">
+                    <Link to={`/product/${product.id}`} className="btn-secondary">
+                      Подробнее
+                    </Link>
+                    <button
+                      onClick={() => addToCart(product)}
+                      disabled={outOfStock}
+                      className="btn-primary"
+                    >
+                      В корзину
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

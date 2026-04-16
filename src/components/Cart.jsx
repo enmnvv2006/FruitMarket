@@ -22,7 +22,7 @@ export default function Cart() {
     return (
       <section className="glass-panel p-8 text-center">
         <h2 className="section-title">Корзина пуста</h2>
-        <p className="muted mt-1">Добавьте фрукты из каталога, чтобы оформить заказ.</p>
+        <p className="muted mt-1">Добавьте товары из каталога, чтобы оформить заказ.</p>
       </section>
     );
   }

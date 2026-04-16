@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { DEFAULT_PRODUCT_CATEGORY, PRODUCT_CATEGORY_OPTIONS } from "../data/productCategories";
 
 const initialState = {
   name: "",
@@ -7,6 +8,11 @@ const initialState = {
   image: "",
   quantity: "",
   isLabTested: false,
+  category: DEFAULT_PRODUCT_CATEGORY,
+  batchId: "",
+  receivedAt: "",
+  source: "",
+  destination: "",
 };
 
 const toFormState = (product) => {
@@ -19,6 +25,11 @@ const toFormState = (product) => {
     image: product.image ?? "",
     quantity: String(product.quantity ?? ""),
     isLabTested: Boolean(product.isLabTested),
+    category: product.category ?? DEFAULT_PRODUCT_CATEGORY,
+    batchId: product.batchId ?? "",
+    receivedAt: product.receivedAt ?? "",
+    source: product.source ?? "",
+    destination: product.destination ?? "",
   };
 };
 
@@ -49,7 +60,15 @@ export default function AddProductForm({
   const onSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.name.trim() || Number(formData.price) <= 0 || Number(formData.quantity) < 0) {
+    if (
+      !formData.name.trim() ||
+      Number(formData.price) <= 0 ||
+      Number(formData.quantity) < 0 ||
+      !formData.batchId.trim() ||
+      !formData.receivedAt.trim() ||
+      !formData.source.trim() ||
+      !formData.destination.trim()
+    ) {
       return;
     }
 
@@ -63,7 +82,7 @@ export default function AddProductForm({
   return (
     <section className="glass-panel p-5 sm:p-6">
       <div className="mb-4">
-        <h2 className="section-title">{title ?? (isEditMode ? "Редактировать товар" : "Добавить новый фрукт")}</h2>
+        <h2 className="section-title">{title ?? (isEditMode ? "Редактировать товар" : "Добавить новый товар")}</h2>
         <p className="muted mt-1">
           {description ??
             (isEditMode
@@ -97,6 +116,50 @@ export default function AddProductForm({
           min="0"
           placeholder="Количество (кг)"
           value={formData.quantity}
+          onChange={onChange}
+          className="input-base"
+          required
+        />
+        <select
+          name="category"
+          value={formData.category}
+          onChange={onChange}
+          className="input-base"
+        >
+          {PRODUCT_CATEGORY_OPTIONS.filter((item) => item.value !== "all").map((category) => (
+            <option key={category.value} value={category.value}>
+              {category.label}
+            </option>
+          ))}
+        </select>
+        <input
+          name="batchId"
+          placeholder="ID партии (например BATCH-2026-001)"
+          value={formData.batchId}
+          onChange={onChange}
+          className="input-base"
+          required
+        />
+        <input
+          name="receivedAt"
+          type="date"
+          value={formData.receivedAt}
+          onChange={onChange}
+          className="input-base"
+          required
+        />
+        <input
+          name="source"
+          placeholder="Откуда пришёл товар"
+          value={formData.source}
+          onChange={onChange}
+          className="input-base"
+          required
+        />
+        <input
+          name="destination"
+          placeholder="Куда ушёл товар"
+          value={formData.destination}
           onChange={onChange}
           className="input-base"
           required
