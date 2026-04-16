@@ -15,6 +15,7 @@ import AddProductForm from "./components/AddProductForm";
 import AuthPage from "./components/AuthPage";
 import AdminPanel from "./components/AdminPanel";
 import AccountPage from "./components/AccountPage";
+import RightPageDrawer from "./components/RightPageDrawer";
 import { CartProvider, useCart } from "./context/CartContext";
 import { mockFruits } from "./data/mockFruits";
 import { mockSellers } from "./data/mockSellers";
@@ -564,6 +565,8 @@ function AppContent() {
             }
           />
         </Routes>
+
+        {isAuthenticated && <RightPageDrawer />}
       </main>
     </div>
   );
