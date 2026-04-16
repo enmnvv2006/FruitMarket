@@ -97,6 +97,7 @@ function sanitizeUser(user) {
     email: user.email ?? null,
     role: user.role,
     sellerId: user.sellerId ?? null,
+    isBlocked: Boolean(user.isBlocked),
   };
 }
 
@@ -114,6 +115,8 @@ async function readDb() {
   return {
     buyers: Array.isArray(parsed.buyers) ? parsed.buyers : [],
     refreshTokens: Array.isArray(parsed.refreshTokens) ? parsed.refreshTokens : [],
+    blockedBuyerIds: Array.isArray(parsed.blockedBuyerIds) ? parsed.blockedBuyerIds : [],
+    blockedSellerIds: Array.isArray(parsed.blockedSellerIds) ? parsed.blockedSellerIds : [],
   };
 }
 
@@ -241,7 +244,64 @@ function fromAccessPayload(payload) {
     email: payload.email,
     role: payload.role,
     sellerId: payload.sellerId ?? null,
+    isBlocked: false,
   };
+}
+
+function isBuyerBlocked(db, buyerId) {
+  return db.blockedBuyerIds.includes(String(buyerId));
+}
+
+function isSellerBlocked(db, sellerId) {
+  return db.blockedSellerIds.includes(Number(sellerId));
+}
+
+function isUserBlocked(db, user) {
+  if (!user) {
+    return false;
+  }
+
+  if (user.role === "buyer") {
+    return isBuyerBlocked(db, user.id);
+  }
+
+  if (user.role === "seller") {
+    return isSellerBlocked(db, user.sellerId);
+  }
+
+  return false;
+}
+
+function decodeAccessFromRequest(req) {
+  const token = extractBearerToken(req);
+
+  if (!token) {
+    return null;
+  }
+
+  const payload = decodeAccessToken(token);
+
+  if (payload.type !== "access") {
+    return null;
+  }
+
+  return payload;
+}
+
+function ensureAdmin(req, res) {
+  try {
+    const payload = decodeAccessFromRequest(req);
+
+    if (!payload || payload.role !== "admin") {
+      res.status(403).json({ message: "Требуются права администратора." });
+      return null;
+    }
+
+    return payload;
+  } catch {
+    res.status(401).json({ message: "Access token недействителен." });
+    return null;
+  }
 }
 
 app.post("/api/auth/register", async (req, res) => {
@@ -296,6 +356,11 @@ app.post("/api/auth/login/buyer", async (req, res) => {
       return;
     }
 
+    if (isBuyerBlocked(db, buyer.id)) {
+      res.status(403).json({ message: "Покупатель заблокирован администратором." });
+      return;
+    }
+
     const isMatch = await bcrypt.compare(password, buyer.passwordHash);
 
     if (!isMatch) {
@@ -319,6 +384,12 @@ app.post("/api/auth/login/seller", async (req, res) => {
 
     if (!sellerAccount || sellerAccount.password !== password) {
       res.status(401).json({ message: "Неверный пароль продавца." });
+      return;
+    }
+
+    const db = await readDb();
+    if (isSellerBlocked(db, sellerId)) {
+      res.status(403).json({ message: "Продавец заблокирован администратором." });
       return;
     }
 
@@ -394,6 +465,14 @@ app.post("/api/auth/refresh", async (req, res) => {
       return;
     }
 
+    if (isUserBlocked(db, user)) {
+      db.refreshTokens = db.refreshTokens.filter((item) => item.userId !== user.id);
+      await writeDb(db);
+      clearRefreshCookie(res);
+      res.status(403).json({ message: "Пользователь заблокирован администратором." });
+      return;
+    }
+
     const response = await issueAuth(res, user);
     res.json(response);
   } catch {
@@ -401,7 +480,7 @@ app.post("/api/auth/refresh", async (req, res) => {
   }
 });
 
-app.get("/api/auth/me", (req, res) => {
+app.get("/api/auth/me", async (req, res) => {
   try {
     const token = extractBearerToken(req);
 
@@ -417,9 +496,112 @@ app.get("/api/auth/me", (req, res) => {
       return;
     }
 
-    res.json({ user: sanitizeUser(fromAccessPayload(payload)) });
+    const user = fromAccessPayload(payload);
+    const db = await readDb();
+
+    if (isUserBlocked(db, user)) {
+      res.status(403).json({ message: "Пользователь заблокирован администратором." });
+      return;
+    }
+
+    res.json({ user: sanitizeUser(user) });
   } catch {
     res.status(401).json({ message: "Access token недействителен." });
+  }
+});
+
+app.get("/api/auth/admin/accounts", async (req, res) => {
+  const adminPayload = ensureAdmin(req, res);
+
+  if (!adminPayload) {
+    return;
+  }
+
+  try {
+    const db = await readDb();
+    const buyers = db.buyers.map((buyer) => ({
+      id: buyer.id,
+      name: buyer.name,
+      email: buyer.email,
+      role: "buyer",
+      isBlocked: isBuyerBlocked(db, buyer.id),
+    }));
+
+    const sellers = sellerAccounts.map((seller) => ({
+      id: seller.sellerId,
+      name: seller.name,
+      role: "seller",
+      isBlocked: isSellerBlocked(db, seller.sellerId),
+    }));
+
+    res.json({ buyers, sellers, requestedBy: adminPayload.sub });
+  } catch {
+    res.status(500).json({ message: "Не удалось загрузить список аккаунтов." });
+  }
+});
+
+app.post("/api/auth/admin/accounts/block", async (req, res) => {
+  const adminPayload = ensureAdmin(req, res);
+
+  if (!adminPayload) {
+    return;
+  }
+
+  const targetRole = String(req.body?.targetRole ?? "").trim();
+  const blocked = Boolean(req.body?.blocked);
+
+  try {
+    const db = await readDb();
+
+    if (targetRole === "buyer") {
+      const buyerId = String(req.body?.targetId ?? "").trim();
+      const buyerExists = db.buyers.some((item) => item.id === buyerId);
+
+      if (!buyerId || !buyerExists) {
+        res.status(404).json({ message: "Покупатель не найден." });
+        return;
+      }
+
+      if (blocked) {
+        if (!db.blockedBuyerIds.includes(buyerId)) {
+          db.blockedBuyerIds.push(buyerId);
+        }
+        db.refreshTokens = db.refreshTokens.filter((item) => item.userId !== buyerId);
+      } else {
+        db.blockedBuyerIds = db.blockedBuyerIds.filter((item) => item !== buyerId);
+      }
+
+      await writeDb(db);
+      res.json({ ok: true, targetRole, targetId: buyerId, blocked, requestedBy: adminPayload.sub });
+      return;
+    }
+
+    if (targetRole === "seller") {
+      const sellerId = Number(req.body?.targetId);
+      const sellerExists = sellerAccounts.some((item) => item.sellerId === sellerId);
+
+      if (!sellerExists) {
+        res.status(404).json({ message: "Продавец не найден." });
+        return;
+      }
+
+      if (blocked) {
+        if (!db.blockedSellerIds.includes(sellerId)) {
+          db.blockedSellerIds.push(sellerId);
+        }
+        db.refreshTokens = db.refreshTokens.filter((item) => item.userId !== `seller-${sellerId}`);
+      } else {
+        db.blockedSellerIds = db.blockedSellerIds.filter((item) => item !== sellerId);
+      }
+
+      await writeDb(db);
+      res.json({ ok: true, targetRole, targetId: sellerId, blocked, requestedBy: adminPayload.sub });
+      return;
+    }
+
+    res.status(400).json({ message: "targetRole должен быть buyer или seller." });
+  } catch {
+    res.status(500).json({ message: "Не удалось обновить статус блокировки." });
   }
 });
 

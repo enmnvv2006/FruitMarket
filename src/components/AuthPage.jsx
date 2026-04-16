@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { mockSellers } from "../data/mockSellers";
@@ -25,6 +25,27 @@ const initialAdminLoginState = {
   password: "",
 };
 
+const REMEMBER_KEYS = {
+  buyer: "fruit-market-remember-buyer",
+  seller: "fruit-market-remember-seller",
+  admin: "fruit-market-remember-admin",
+};
+
+function readRemembered(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveRemembered(key, payload) {
+  localStorage.setItem(key, JSON.stringify(payload));
+}
+
 export default function AuthPage() {
   const navigate = useNavigate();
   const { currentUser, loginBuyer, loginSeller, loginAdmin, register, authLoading } = useCart();
@@ -34,12 +55,45 @@ export default function AuthPage() {
   const [buyerLoginForm, setBuyerLoginForm] = useState(initialBuyerLoginState);
   const [sellerLoginForm, setSellerLoginForm] = useState(initialSellerLoginState);
   const [adminLoginForm, setAdminLoginForm] = useState(initialAdminLoginState);
+  const [rememberBuyer, setRememberBuyer] = useState(false);
+  const [rememberSeller, setRememberSeller] = useState(false);
+  const [rememberAdmin, setRememberAdmin] = useState(false);
   const [registerForm, setRegisterForm] = useState(initialRegisterState);
 
   const title = useMemo(
     () => (isLoginMode ? "Вход в аккаунт" : "Регистрация покупателя"),
     [isLoginMode]
   );
+
+  useEffect(() => {
+    const rememberedBuyer = readRemembered(REMEMBER_KEYS.buyer);
+    const rememberedSeller = readRemembered(REMEMBER_KEYS.seller);
+    const rememberedAdmin = readRemembered(REMEMBER_KEYS.admin);
+
+    if (rememberedBuyer?.email && rememberedBuyer?.password) {
+      setBuyerLoginForm({
+        email: String(rememberedBuyer.email),
+        password: String(rememberedBuyer.password),
+      });
+      setRememberBuyer(true);
+    }
+
+    if (rememberedSeller?.sellerId && rememberedSeller?.password) {
+      setSellerLoginForm({
+        sellerId: Number(rememberedSeller.sellerId),
+        password: String(rememberedSeller.password),
+      });
+      setRememberSeller(true);
+    }
+
+    if (rememberedAdmin?.username && rememberedAdmin?.password) {
+      setAdminLoginForm({
+        username: String(rememberedAdmin.username),
+        password: String(rememberedAdmin.password),
+      });
+      setRememberAdmin(true);
+    }
+  }, []);
 
   if (currentUser) {
     return <Navigate to="/" replace />;
@@ -56,6 +110,12 @@ export default function AuthPage() {
       return;
     }
 
+    if (rememberBuyer) {
+      saveRemembered(REMEMBER_KEYS.buyer, buyerLoginForm);
+    } else {
+      localStorage.removeItem(REMEMBER_KEYS.buyer);
+    }
+
     navigate("/", { replace: true });
   };
 
@@ -70,6 +130,12 @@ export default function AuthPage() {
       return;
     }
 
+    if (rememberSeller) {
+      saveRemembered(REMEMBER_KEYS.seller, sellerLoginForm);
+    } else {
+      localStorage.removeItem(REMEMBER_KEYS.seller);
+    }
+
     navigate("/", { replace: true });
   };
 
@@ -82,6 +148,12 @@ export default function AuthPage() {
     if (!result.ok) {
       setError(result.error);
       return;
+    }
+
+    if (rememberAdmin) {
+      saveRemembered(REMEMBER_KEYS.admin, adminLoginForm);
+    } else {
+      localStorage.removeItem(REMEMBER_KEYS.admin);
     }
 
     navigate("/admin", { replace: true });
@@ -219,6 +291,14 @@ export default function AuthPage() {
                   <button type="submit" className="btn-primary w-full" disabled={authLoading}>
                     Войти как покупатель
                   </button>
+                  <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <input
+                      type="checkbox"
+                      checked={rememberBuyer}
+                      onChange={(event) => setRememberBuyer(event.target.checked)}
+                    />
+                    Запомнить логин и пароль
+                  </label>
                 </form>
               )}
 
@@ -253,6 +333,14 @@ export default function AuthPage() {
                   <button type="submit" className="btn-primary w-full" disabled={authLoading}>
                     Войти как продавец
                   </button>
+                  <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <input
+                      type="checkbox"
+                      checked={rememberSeller}
+                      onChange={(event) => setRememberSeller(event.target.checked)}
+                    />
+                    Запомнить логин и пароль
+                  </label>
                 </form>
               )}
 
@@ -281,6 +369,14 @@ export default function AuthPage() {
                   <button type="submit" className="btn-primary w-full" disabled={authLoading}>
                     Войти в админ-панель
                   </button>
+                  <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <input
+                      type="checkbox"
+                      checked={rememberAdmin}
+                      onChange={(event) => setRememberAdmin(event.target.checked)}
+                    />
+                    Запомнить логин и пароль
+                  </label>
                 </form>
               )}
             </>

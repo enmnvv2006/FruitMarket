@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 
 export default function Cart() {
-  const { cart, cartTotal, currentUser, updateQty, removeFromCart, clearCart } = useCart();
+  const { cart, cartTotal, currentUser, updateQty, removeFromCart, placeOrder } = useCart();
   const [customerName, setCustomerName] = useState(currentUser?.name ?? "");
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export default function Cart() {
     e.preventDefault();
     if (!cart.length || !customerName.trim()) return;
 
-    clearCart();
+    placeOrder({ customerName: customerName.trim() });
     setCustomerName(currentUser?.name ?? "");
     alert("Заказ оформлен");
   };

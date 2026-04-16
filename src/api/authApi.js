@@ -123,6 +123,27 @@ export async function getMe() {
   return parseResponse(response);
 }
 
+export async function getAdminAccounts() {
+  const response = await fetch(`${API_BASE}/admin/accounts`, {
+    method: "GET",
+    credentials: "include",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+export async function setAccountBlocked({ targetRole, targetId, blocked }) {
+  const response = await fetch(`${API_BASE}/admin/accounts/block`, {
+    method: "POST",
+    credentials: "include",
+    headers: buildHeaders(),
+    body: JSON.stringify({ targetRole, targetId, blocked }),
+  });
+
+  return parseResponse(response);
+}
+
 export function clearAccessToken() {
   setAccessToken(null);
 }

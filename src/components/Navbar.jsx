@@ -34,9 +34,16 @@ export default function Navbar() {
           <NavLink to="/" className={navLinkClass}>
             Каталог
           </NavLink>
-          <NavLink to="/cart" className={navLinkClass}>
-            Корзина ({cartCount})
-          </NavLink>
+          {currentUser.role === "buyer" && (
+            <NavLink to="/cart" className={navLinkClass}>
+              Корзина ({cartCount})
+            </NavLink>
+          )}
+          {currentUser.role !== "admin" && (
+            <NavLink to="/account" className={navLinkClass}>
+              Личный кабинет
+            </NavLink>
+          )}
           {currentUser.role === "seller" && (
             <NavLink to={`/seller/${currentUser.sellerId}`} className={navLinkClass}>
               Мой профиль

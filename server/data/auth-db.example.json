@@ -1,4 +1,6 @@
 {
   "buyers": [],
-  "refreshTokens": []
+  "refreshTokens": [],
+  "blockedBuyerIds": [],
+  "blockedSellerIds": []
 }

@@ -11,12 +11,33 @@ import {
 } from "../api/authApi";
 
 const clampQty = (qty, maxQty) => Math.max(1, Math.min(qty, maxQty));
+const ORDER_STATUSES = ["В обработке", "Доставлен", "Отменён"];
+
+const normalizeOrder = (order) => ({
+  id: String(order?.id ?? `order-${Date.now()}`),
+  createdAt: String(order?.createdAt ?? new Date().toISOString()),
+  status: ORDER_STATUSES.includes(order?.status) ? order.status : "В обработке",
+  total: Number(order?.total ?? 0),
+  customerName: String(order?.customerName ?? ""),
+  customerUserId: String(order?.customerUserId ?? ""),
+  customerEmail: order?.customerEmail ? String(order.customerEmail) : null,
+  items: Array.isArray(order?.items)
+    ? order.items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: Number(item.price),
+        qty: Number(item.qty),
+        sellerId: Number(item.sellerId),
+      }))
+    : [],
+});
 
 export const useCartStore = create(
   persist(
     (set, get) => ({
       cart: [],
       users: [],
+      orders: [],
       currentUser: null,
       isAuthChecked: false,
       authLoading: false,
@@ -157,6 +178,54 @@ export const useCartStore = create(
         })),
 
       clearCart: () => set({ cart: [] }),
+
+      placeOrder: ({ customerName }) =>
+        set((state) => {
+          const normalizedName = String(customerName ?? "").trim();
+          const hasCart = state.cart.length > 0;
+
+          if (!hasCart || !normalizedName || !state.currentUser) {
+            return {};
+          }
+
+          const items = state.cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: Number(item.price),
+            qty: Number(item.qty),
+            sellerId: Number(item.sellerId),
+          }));
+
+          const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+          const order = normalizeOrder({
+            id: `order-${Date.now()}`,
+            createdAt: new Date().toISOString(),
+            status: "В обработке",
+            total,
+            customerName: normalizedName,
+            customerUserId: state.currentUser.id,
+            customerEmail: state.currentUser.email ?? null,
+            items,
+          });
+
+          return {
+            orders: [order, ...state.orders],
+            cart: [],
+          };
+        }),
+
+      updateOrderStatus: ({ orderId, status }) =>
+        set((state) => {
+          if (!ORDER_STATUSES.includes(status)) {
+            return {};
+          }
+
+          return {
+            orders: state.orders.map((order) =>
+              order.id === orderId ? { ...order, status } : order
+            ),
+          };
+        }),
     }),
     {
       name: "fruit-market-store",
@@ -164,11 +233,15 @@ export const useCartStore = create(
       partialize: (state) => ({
         cart: state.cart,
         users: state.users,
+        orders: state.orders,
       }),
       merge: (persistedState, currentState) => ({
         ...currentState,
         cart: persistedState?.cart ?? [],
         users: persistedState?.users ?? [],
+        orders: Array.isArray(persistedState?.orders)
+          ? persistedState.orders.map(normalizeOrder)
+          : [],
         currentUser: null,
         isAuthChecked: false,
         authLoading: false,

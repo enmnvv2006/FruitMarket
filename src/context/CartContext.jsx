@@ -7,6 +7,7 @@ export function CartProvider({ children }) {
 export function useCart() {
   const cart = useCartStore((state) => state.cart);
   const users = useCartStore((state) => state.users);
+  const orders = useCartStore((state) => state.orders);
   const currentUser = useCartStore((state) => state.currentUser);
   const isAuthChecked = useCartStore((state) => state.isAuthChecked);
   const authLoading = useCartStore((state) => state.authLoading);
@@ -20,6 +21,8 @@ export function useCart() {
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const updateQty = useCartStore((state) => state.updateQty);
   const clearCart = useCartStore((state) => state.clearCart);
+  const placeOrder = useCartStore((state) => state.placeOrder);
+  const updateOrderStatus = useCartStore((state) => state.updateOrderStatus);
 
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const cartTotal = cart.reduce((sum, item) => sum + item.qty * item.price, 0);
@@ -27,6 +30,7 @@ export function useCart() {
   return {
     cart,
     users,
+    orders,
     cartCount,
     cartTotal,
     currentUser,
@@ -43,5 +47,7 @@ export function useCart() {
     removeFromCart,
     updateQty,
     clearCart,
+    placeOrder,
+    updateOrderStatus,
   };
 }

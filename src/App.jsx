@@ -14,6 +14,7 @@ import Cart from "./components/Cart";
 import AddProductForm from "./components/AddProductForm";
 import AuthPage from "./components/AuthPage";
 import AdminPanel from "./components/AdminPanel";
+import AccountPage from "./components/AccountPage";
 import { CartProvider, useCart } from "./context/CartContext";
 import { mockFruits } from "./data/mockFruits";
 import { mockSellers } from "./data/mockSellers";
@@ -447,6 +448,7 @@ function AppContent() {
             <div className="space-y-1 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)]">
               <p>🆔 ID партии: {product.batchId}</p>
               <p>📅 Дата поступления: {product.receivedAt}</p>
+              <p>🧪 Лабораторная проверка: {product.isLabTested ? "Пройдена" : "Не пройдена"}</p>
               <p>🚚 Откуда пришёл: {product.source}</p>
               <p>📦 Куда ушёл: {product.destination}</p>
             </div>
@@ -498,7 +500,15 @@ function AppContent() {
             path="/cart"
             element={
               <RequireAuth>
-                <Cart />
+                {currentUser?.role === "buyer" ? <Cart /> : <Navigate to={currentUser?.role === "admin" ? "/admin" : "/"} replace />}
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/account"
+            element={
+              <RequireAuth>
+                {currentUser?.role === "admin" ? <Navigate to="/admin" replace /> : <AccountPage />}
               </RequireAuth>
             }
           />
