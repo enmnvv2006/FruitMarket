@@ -604,6 +604,115 @@ function HomePage({
   );
 }
 
+function LandingPage({ products, isAuthenticated }) {
+  const totalItems = products.length;
+  const totalVolume = products.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  const avgPrice = totalItems
+    ? Math.round(products.reduce((sum, item) => sum + (Number(item.price) || 0), 0) / totalItems)
+    : 0;
+
+  return (
+    <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-[28px] border border-[rgba(63,143,58,0.18)] bg-[linear-gradient(135deg,#163923_0%,#1f4f2b_54%,#2d6f39_100%)] px-5 py-8 text-white shadow-[0_28px_56px_rgba(12,35,18,0.32)] sm:px-8 sm:py-10">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[rgba(240,176,74,0.2)] blur-2xl" />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-[rgba(255,255,255,0.08)] blur-2xl" />
+
+        <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[rgba(224,244,217,0.86)]">
+              Farm Ops Platform
+            </p>
+            <h1 className="mt-3 text-4xl font-extrabold leading-[1.06] sm:text-5xl">
+              Управляйте фермой
+              <br />
+              в одном рабочем месте
+            </h1>
+            <p className="mt-4 max-w-2xl text-base text-[rgba(234,245,230,0.92)] sm:text-lg">
+              Учет партий, поставок, заказов и продаж в едином интерфейсе для команды, продавцов и
+              покупателей.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link to={isAuthenticated ? "/" : "/auth"} className="rounded-2xl bg-[var(--accent)] px-5 py-3 text-sm font-bold text-[#3b2600] transition hover:brightness-95">
+                {isAuthenticated ? "Открыть каталог" : "Начать работу"}
+              </Link>
+              <Link to={isAuthenticated ? "/account" : "/auth"} className="rounded-2xl border border-[rgba(224,244,217,0.45)] bg-[rgba(255,255,255,0.06)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[rgba(255,255,255,0.12)]">
+                {isAuthenticated ? "Личный кабинет" : "Войти в аккаунт"}
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <article className="rounded-2xl border border-[rgba(224,244,217,0.25)] bg-[rgba(255,255,255,0.07)] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-[rgba(224,244,217,0.8)]">Партии</p>
+              <p className="mt-2 text-3xl font-extrabold">{totalItems}</p>
+              <p className="mt-1 text-sm text-[rgba(224,244,217,0.88)]">В активном каталоге</p>
+            </article>
+            <article className="rounded-2xl border border-[rgba(224,244,217,0.25)] bg-[rgba(255,255,255,0.07)] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-[rgba(224,244,217,0.8)]">Объём</p>
+              <p className="mt-2 text-3xl font-extrabold">{totalVolume} кг</p>
+              <p className="mt-1 text-sm text-[rgba(224,244,217,0.88)]">Актуальные остатки</p>
+            </article>
+            <article className="rounded-2xl border border-[rgba(224,244,217,0.25)] bg-[rgba(255,255,255,0.07)] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-[rgba(224,244,217,0.8)]">Средняя цена</p>
+              <p className="mt-2 text-3xl font-extrabold">{avgPrice} сом</p>
+              <p className="mt-1 text-sm text-[rgba(224,244,217,0.88)]">За килограмм</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <article className="glass-panel p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--brand)]">Процессы</p>
+          <h3 className="mt-2 text-xl font-extrabold text-[var(--text)]">Управление задачами и урожаем</h3>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Планируйте работы по полям, фиксируйте партии и держите всю операционку в одном месте без таблиц.
+          </p>
+        </article>
+        <article className="glass-panel p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--brand)]">Продажи</p>
+          <h3 className="mt-2 text-xl font-extrabold text-[var(--text)]">Заказы и покупатели</h3>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Принимайте заказы, отслеживайте статусы и работайте с клиентами через единый поток уведомлений.
+          </p>
+        </article>
+        <article className="glass-panel p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--brand)]">Прозрачность</p>
+          <h3 className="mt-2 text-xl font-extrabold text-[var(--text)]">Трассировка партий по QR</h3>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Каждая партия доступна по QR-коду с ключевыми данными: источник, дата поступления и логистика.
+          </p>
+        </article>
+      </section>
+
+      <section className="glass-panel p-5 sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--brand)]">
+              Готовы начать
+            </p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-[var(--text)]">
+              Запустите цифровой контур вашей фермы
+            </h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              Регистрация занимает меньше минуты, после входа откроется каталог и рабочие разделы.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link to={isAuthenticated ? "/" : "/auth"} className="btn-primary">
+              {isAuthenticated ? "Перейти в каталог" : "Регистрация / Вход"}
+            </Link>
+            <Link to="/auth" className="btn-secondary">
+              Открыть авторизацию
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function AppContent() {
   const [products, setProducts] = useState(() => getInitialProducts());
   const [searchQuery, setSearchQuery] = useState("");
@@ -921,12 +1030,12 @@ function AppContent() {
           {showDashboardHero && <DashboardHeader products={products} />}
 
           <Routes>
-          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/auth" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />} />
 
           <Route
             path="/"
             element={
-              <RequireAuth>
+              isAuthenticated ? (
                 <HomePage
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
@@ -935,7 +1044,9 @@ function AppContent() {
                   filteredProducts={filteredProducts}
                   sellersById={sellersById}
                 />
-              </RequireAuth>
+              ) : (
+                <LandingPage products={products} isAuthenticated={isAuthenticated} />
+              )
             }
           />
           <Route
