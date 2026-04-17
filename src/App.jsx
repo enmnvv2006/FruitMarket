@@ -3,19 +3,21 @@ import {
   BrowserRouter,
   Link,
   Navigate,
+  NavLink,
   Route,
   Routes,
+  useLocation,
   useParams,
 } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import Navbar from "./components/Navbar";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import ProductList from "./components/ProductList";
 import Cart from "./components/Cart";
 import AddProductForm from "./components/AddProductForm";
 import AuthPage from "./components/AuthPage";
 import AdminPanel from "./components/AdminPanel";
 import AccountPage from "./components/AccountPage";
-import RightPageDrawer from "./components/RightPageDrawer";
 import { CartProvider, useCart } from "./context/CartContext";
 import { mockFruits } from "./data/mockFruits";
 import { mockSellers } from "./data/mockSellers";
@@ -26,6 +28,8 @@ import {
 } from "./data/productCategories";
 
 const PRODUCTS_STORAGE_KEY = "fruit-market-products";
+const FALLBACK_PRODUCT_IMAGE =
+  "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=1200&q=80";
 
 function normalizeBatchText(value, fallback) {
   const text = String(value ?? "").trim();
@@ -111,6 +115,341 @@ function RequireAdmin({ children }) {
   return children;
 }
 
+function NavGlyph({ kind }) {
+  if (kind === "dashboard") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    );
+  }
+
+  if (kind === "cart") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 5h2l1.5 9.2h10.7l1.8-6.2H8.2" />
+        <circle cx="10" cy="19" r="1.5" />
+        <circle cx="17" cy="19" r="1.5" />
+      </svg>
+    );
+  }
+
+  if (kind === "account") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M4 20c1.2-3.5 4.1-5 8-5s6.8 1.5 8 5" />
+      </svg>
+    );
+  }
+
+  if (kind === "admin") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  );
+}
+
+function AppSidebar({ currentUser, cartCount, logout }) {
+  if (!currentUser) {
+    return null;
+  }
+
+  const links =
+    currentUser.role === "admin"
+      ? [
+          { to: "/", label: "Дашборд", kind: "dashboard" },
+          { to: "/admin", label: "Админ-панель", kind: "admin" },
+        ]
+      : currentUser.role === "seller"
+        ? [
+            { to: "/", label: "Дашборд", kind: "dashboard" },
+            { to: `/seller/${currentUser.sellerId}`, label: "Урожай", kind: "cart" },
+            { to: "/account", label: "Сделки", kind: "account" },
+          ]
+        : [
+            { to: "/", label: "Дашборд", kind: "dashboard" },
+            { to: "/cart", label: `Корзина (${cartCount})`, kind: "cart" },
+            { to: "/account", label: "Сделки", kind: "account" },
+          ];
+
+  const linkClass = ({ isActive }) =>
+    `flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold transition ${
+      isActive
+        ? "bg-[rgba(63,143,58,0.95)] text-white"
+        : "text-[rgba(232,245,224,0.88)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white"
+    }`;
+
+  return (
+    <aside className="app-sidebar hidden xl:sticky xl:top-3 xl:flex xl:h-[calc(100vh-1.5rem)] xl:w-[290px] xl:flex-col">
+      <div>
+        <h1 className="brand-font text-[42px] leading-none text-white">Aykyn Charba</h1>
+        <p className="mt-3 text-base text-[rgba(229,240,223,0.82)]">Фермерская платформа</p>
+      </div>
+
+      <nav className="mt-8 space-y-2">
+        {links.map((item) => (
+          <NavLink key={item.to} to={item.to} className={linkClass}>
+            <NavGlyph kind={item.kind} />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="mt-auto space-y-2 border-t border-[rgba(189,218,174,0.2)] pt-5">
+        <NavLink to="/account" className={linkClass}>
+          <NavGlyph kind="account" />
+          <span>Настройки</span>
+        </NavLink>
+        <button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-base font-semibold text-[rgba(232,245,224,0.88)] transition hover:bg-[rgba(255,255,255,0.1)] hover:text-white">
+          <NavGlyph kind="menu" />
+          <span>Выход</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function formatNotificationTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (minutes < 1) {
+    return "только что";
+  }
+
+  if (minutes < 60) {
+    return `${minutes} мин назад`;
+  }
+
+  if (hours < 24) {
+    return `${hours} ч назад`;
+  }
+
+  return date.toLocaleDateString("ru-RU");
+}
+
+function NotificationTypeIcon({ type }) {
+  if (type === "order_status_changed") {
+    return (
+      <span className="mt-0.5 grid h-6 w-6 place-items-center rounded-full bg-[rgba(63,143,58,0.14)] text-[var(--brand)]">
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <path d="m5 13 4 4L19 7" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (type === "order_created") {
+    return (
+      <span className="mt-0.5 grid h-6 w-6 place-items-center rounded-full bg-[rgba(240,176,74,0.16)] text-[rgba(210,134,12,1)]">
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <path d="M4 12h4l2 5 4-10 2 5h4" />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className="mt-0.5 grid h-6 w-6 place-items-center rounded-full bg-[rgba(96,114,85,0.14)] text-[var(--muted)]">
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v4m0 4h.01" />
+      </svg>
+    </span>
+  );
+}
+
+function AppTopBar({
+  currentUser,
+  cartCount,
+  logout,
+  searchQuery,
+  setSearchQuery,
+  notifications,
+  unreadNotificationsCount,
+  markNotificationRead,
+  markAllNotificationsRead,
+}) {
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const mobileLinks =
+    currentUser.role === "admin"
+      ? [{ to: "/", label: "Дашборд" }, { to: "/admin", label: "Админ" }]
+      : currentUser.role === "seller"
+        ? [
+            { to: "/", label: "Дашборд" },
+            { to: `/seller/${currentUser.sellerId}`, label: "Урожай" },
+            { to: "/account", label: "Сделки" },
+          ]
+        : [
+            { to: "/", label: "Дашборд" },
+            { to: "/cart", label: `Корзина (${cartCount})` },
+            { to: "/account", label: "Сделки" },
+          ];
+
+  return (
+    <header className="glass-panel relative z-40 overflow-visible flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
+      <label htmlFor="global-search" className="relative block min-w-[260px] flex-1">
+        <svg
+          viewBox="0 0 24 24"
+          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--muted)]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.2-3.2" />
+        </svg>
+        <input
+          id="global-search"
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Поиск по партиям, сделкам..."
+          className="input-base w-full pl-12"
+        />
+      </label>
+
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsNotificationsOpen((prev) => !prev)}
+            className="relative grid h-11 w-11 place-items-center rounded-2xl border border-[rgba(27,42,22,0.24)] bg-white text-[var(--muted)] shadow-[0_6px_16px_rgba(23,55,24,0.08)]"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+              <path d="M10 17a2 2 0 0 0 4 0" />
+            </svg>
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 h-5 min-w-5 rounded-full bg-[var(--accent)] px-1 text-xs font-bold leading-5 text-white ring-2 ring-white">
+                {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
+              </span>
+            )}
+          </button>
+
+          {isNotificationsOpen && (
+            <div className="absolute right-0 top-full z-[120] mt-2 w-[420px] max-w-[92vw] overflow-hidden rounded-3xl border border-[var(--line)] bg-[#f7faf5] shadow-[0_30px_60px_rgba(23,55,24,0.18)]">
+              <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
+                <p className="text-3xl font-extrabold leading-none text-[var(--text)]">Уведомления</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    markAllNotificationsRead();
+                    setIsNotificationsOpen(false);
+                  }}
+                  className="text-sm font-semibold text-[var(--brand)]"
+                >
+                  Прочитать все
+                </button>
+              </div>
+
+              <div className="max-h-[430px] overflow-auto">
+                {notifications.length ? (
+                  notifications.slice(0, 8).map((item) => (
+                    <div key={item.id} className="border-b border-[var(--line)] last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() => markNotificationRead(item.id)}
+                        className="flex w-full items-start gap-3 px-5 py-4 text-left transition hover:bg-[rgba(63,143,58,0.06)]"
+                      >
+                        <NotificationTypeIcon type={item.type} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-base font-bold leading-5 text-[var(--text)]">
+                              {item.title}
+                            </p>
+                            {!item.isRead && (
+                              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
+                            )}
+                          </div>
+                          <p className="mt-1 text-sm leading-5 text-[var(--muted)]">
+                            {item.message}
+                          </p>
+                          <p className="mt-2 text-xs text-[var(--muted)]">
+                            {formatNotificationTime(item.createdAt)}
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="px-5 py-6 text-sm text-[var(--muted)]">
+                    Новых уведомлений пока нет.
+                  </p>
+                )}
+              </div>
+
+              <Link
+                to="/account"
+                onClick={() => setIsNotificationsOpen(false)}
+                className="block border-t border-[var(--line)] px-5 py-4 text-center text-base font-semibold text-[var(--brand)] transition hover:bg-[rgba(63,143,58,0.06)]"
+              >
+                Посмотреть все уведомления
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-3 py-2">
+          <div className="text-right">
+            <p className="text-sm font-semibold text-[var(--text)]">{currentUser.name}</p>
+            <p className="text-xs text-[var(--muted)]">{currentUser.role === "seller" ? "Фермер" : currentUser.role === "admin" ? "Администратор" : "Покупатель"}</p>
+          </div>
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--brand)] text-sm font-bold text-white">
+            {String(currentUser.name).slice(0, 1).toUpperCase()}
+          </span>
+        </div>
+      </div>
+
+      <nav className="flex w-full flex-wrap items-center gap-2 xl:hidden">
+        {mobileLinks.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) =>
+              `rounded-2xl px-3 py-2 text-sm font-semibold transition ${
+                isActive
+                  ? "bg-[var(--brand)] text-white"
+                  : "border border-[var(--line)] bg-white text-[var(--muted)]"
+              }`
+            }
+          >
+            {item.label}
+          </NavLink>
+        ))}
+        <button type="button" onClick={logout} className="btn-danger px-3 py-2 text-sm">
+          Выход
+        </button>
+      </nav>
+    </header>
+  );
+}
+
 function DashboardHeader({ products }) {
   const { currentUser } = useCart();
 
@@ -135,25 +474,47 @@ function DashboardHeader({ products }) {
         : "Покупатель";
 
   return (
-    <section className="glass-panel mb-6 overflow-hidden p-5 sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="brand-font text-xs uppercase tracking-[0.24em] text-[var(--brand)]">
-            Fresh Marketplace
-          </p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[var(--text)] sm:text-3xl">
-            Каталог товаров
-          </h1>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            {currentUser.name}: {roleLabel}
-          </p>
-        </div>
+    <section className="space-y-4">
+      <div className="glass-panel p-5 sm:p-6">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-[46px] sm:leading-[1.04]">
+              Добро пожаловать, {currentUser.name}!
+            </h1>
+            <p className="mt-2 text-lg text-[var(--muted)]">Управляйте своими партиями и сделками</p>
+            <p className="mt-2 text-sm text-[var(--muted)]">{roleLabel}</p>
+          </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <div className="pill">Товаров: {stats.items}</div>
-          <div className="pill">В наличии: {stats.inStock} кг</div>
-          <div className="pill">Средняя цена: {stats.avgPrice} сом</div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <button type="button" className="btn-secondary border-[rgba(63,143,58,0.6)] text-[var(--brand)]">
+              Мои QR-коды
+            </button>
+            <button type="button" className="rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[#322100] transition hover:brightness-95">
+              Найти покупателя
+            </button>
+            <button type="button" className="btn-primary">
+              Добавить урожай
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <article className="glass-panel p-5">
+          <p className="text-base font-semibold text-[var(--muted)]">Активные партии</p>
+          <p className="mt-2 text-5xl font-extrabold text-[var(--text)]">{stats.items}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">Готовы к продаже</p>
+        </article>
+        <article className="glass-panel border-[rgba(240,176,74,0.45)] p-5">
+          <p className="text-base font-semibold text-[var(--muted)]">Общий объём</p>
+          <p className="mt-2 text-5xl font-extrabold text-[var(--text)]">{stats.inStock}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">Тонн продукции</p>
+        </article>
+        <article className="glass-panel p-5">
+          <p className="text-base font-semibold text-[var(--muted)]">Потенциальная выручка</p>
+          <p className="mt-2 text-5xl font-extrabold text-[var(--text)]">{stats.avgPrice}k</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">По текущим ценам</p>
+        </article>
       </div>
     </section>
   );
@@ -170,6 +531,10 @@ function HomePage({
   return (
     <div className="space-y-4">
       <section className="glass-panel p-4 sm:p-5">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="ui-chip">Фильтры каталога</span>
+          <span className="accent-badge">Подбор за 1 клик</span>
+        </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_240px]">
           <div>
             <label
@@ -184,7 +549,7 @@ function HomePage({
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Например: манго, яблоко, Organic..."
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--text)] outline-none transition focus:border-[var(--brand)] focus:ring-2 focus:ring-[rgba(47,125,68,0.2)]"
+              className="input-base"
             />
           </div>
 
@@ -199,7 +564,7 @@ function HomePage({
               id="product-category"
               value={selectedCategory}
               onChange={(event) => setSelectedCategory(event.target.value)}
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--text)] outline-none transition focus:border-[var(--brand)] focus:ring-2 focus:ring-[rgba(47,125,68,0.2)]"
+              className="input-base"
             >
               {PRODUCT_CATEGORY_OPTIONS.map((category) => (
                 <option key={category.value} value={category.value}>
@@ -216,6 +581,14 @@ function HomePage({
           Найдено товаров: <span className="font-semibold text-[var(--text)]">{filteredProducts.length}</span>
         </p>
       )}
+
+      <div className="flex items-end justify-between px-1">
+        <div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-[var(--text)]">Активные партии</h2>
+          <p className="mt-1 text-lg text-[var(--muted)]">Последние 5 партий урожая</p>
+        </div>
+        <span className="hidden text-lg font-semibold text-[var(--brand)] sm:inline">Посмотреть все →</span>
+      </div>
 
       <ProductList
         products={filteredProducts}
@@ -235,7 +608,20 @@ function AppContent() {
   const [products, setProducts] = useState(() => getInitialProducts());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const { currentUser, isAuthenticated, isAuthChecked, initializeAuth } = useCart();
+  const location = useLocation();
+  const {
+    currentUser,
+    cartCount,
+    logout,
+    notifications,
+    unreadNotificationsCount,
+    markNotificationRead,
+    markAllNotificationsRead,
+    isAuthenticated,
+    isAuthChecked,
+    initializeAuth,
+  } = useCart();
+  const showDashboardHero = isAuthenticated && location.pathname === "/";
   const sellersById = useMemo(
     () => Object.fromEntries(mockSellers.map((seller) => [seller.id, seller])),
     []
@@ -404,6 +790,27 @@ function AppContent() {
 
     const seller = sellersById[product.sellerId];
     const outOfStock = product.quantity <= 0;
+    const productLink =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/product/${product.id}`
+        : `/product/${product.id}`;
+    const qrPayload = JSON.stringify(
+      {
+        id: product.id,
+        name: product.name,
+        batchId: product.batchId,
+        seller: seller?.shopName ?? "Не указан",
+        receivedAt: product.receivedAt,
+        source: product.source,
+        destination: product.destination,
+        url: productLink,
+      },
+      null,
+      0,
+    );
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
+      qrPayload,
+    )}`;
 
     return (
       <section className="glass-panel p-5 sm:p-6">
@@ -418,6 +825,10 @@ function AppContent() {
           <img
             src={product.image}
             alt={product.name}
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = FALLBACK_PRODUCT_IMAGE;
+            }}
             className="h-64 w-full rounded-2xl border border-[var(--line)] object-cover sm:h-80"
           />
 
@@ -453,6 +864,19 @@ function AppContent() {
               <p>🚚 Откуда пришёл: {product.source}</p>
               <p>📦 Куда ушёл: {product.destination}</p>
             </div>
+
+            <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
+              <p className="text-sm font-semibold text-[var(--text)]">QR-код товара</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Сканируйте для просмотра данных партии и ссылки на товар.
+              </p>
+              <img
+                src={qrCodeUrl}
+                alt={`QR-код товара ${product.name}`}
+                className="mt-3 h-52 w-52 rounded-xl border border-[var(--line)] bg-white object-contain"
+                loading="lazy"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -473,13 +897,30 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen pb-8">
-      {isAuthenticated && <Navbar />}
+    <div className="min-h-screen p-3 sm:p-4">
+      <div className="mx-auto flex w-full max-w-[1700px] gap-4">
+        {isAuthenticated && (
+          <AppSidebar currentUser={currentUser} cartCount={cartCount} logout={logout} />
+        )}
 
-      <main className="shell pt-5">
-        {isAuthenticated && <DashboardHeader products={products} />}
+        <main className="min-w-0 flex-1 space-y-4">
+          {isAuthenticated && (
+            <AppTopBar
+              currentUser={currentUser}
+              cartCount={cartCount}
+              logout={logout}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              notifications={notifications}
+              unreadNotificationsCount={unreadNotificationsCount}
+              markNotificationRead={markNotificationRead}
+              markAllNotificationsRead={markAllNotificationsRead}
+            />
+          )}
 
-        <Routes>
+          {showDashboardHero && <DashboardHeader products={products} />}
+
+          <Routes>
           <Route path="/auth" element={<AuthPage />} />
 
           <Route
@@ -564,10 +1005,9 @@ function AppContent() {
               </section>
             }
           />
-        </Routes>
-
-        {isAuthenticated && <RightPageDrawer />}
-      </main>
+          </Routes>
+        </main>
+      </div>
     </div>
   );
 }
@@ -577,6 +1017,7 @@ export default function App() {
     <CartProvider>
       <BrowserRouter>
         <AppContent />
+        <ToastContainer position="top-right" autoClose={1800} newestOnTop />
       </BrowserRouter>
     </CartProvider>
   );

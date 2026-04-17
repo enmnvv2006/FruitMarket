@@ -12,6 +12,7 @@ import {
 
 const clampQty = (qty, maxQty) => Math.max(1, Math.min(qty, maxQty));
 const ORDER_STATUSES = ["В обработке", "Доставлен", "Отменён"];
+const NOTIFICATION_TYPES = ["order_created", "order_status_changed", "system"];
 
 const normalizeOrder = (order) => ({
   id: String(order?.id ?? `order-${Date.now()}`),
@@ -32,12 +33,60 @@ const normalizeOrder = (order) => ({
     : [],
 });
 
+const normalizeNotification = (notification) => ({
+  id: String(notification?.id ?? `notification-${Date.now()}`),
+  type: NOTIFICATION_TYPES.includes(notification?.type)
+    ? notification.type
+    : "system",
+  title: String(notification?.title ?? "Уведомление"),
+  message: String(notification?.message ?? ""),
+  createdAt: String(notification?.createdAt ?? new Date().toISOString()),
+  isRead: Boolean(notification?.isRead),
+  orderId: notification?.orderId ? String(notification.orderId) : null,
+  recipientRole: String(notification?.recipientRole ?? ""),
+  recipientUserId: notification?.recipientUserId
+    ? String(notification.recipientUserId)
+    : null,
+  recipientSellerId:
+    notification?.recipientSellerId === null ||
+    notification?.recipientSellerId === undefined
+      ? null
+      : Number(notification.recipientSellerId),
+});
+
+const isNotificationForUser = (notification, user) => {
+  if (!user) {
+    return false;
+  }
+
+  if (user.role === "seller") {
+    return (
+      notification.recipientRole === "seller" &&
+      Number(notification.recipientSellerId) === Number(user.sellerId)
+    );
+  }
+
+  if (user.role === "buyer") {
+    return (
+      notification.recipientRole === "buyer" &&
+      String(notification.recipientUserId) === String(user.id)
+    );
+  }
+
+  if (user.role === "admin") {
+    return notification.recipientRole === "admin";
+  }
+
+  return false;
+};
+
 export const useCartStore = create(
   persist(
     (set, get) => ({
       cart: [],
       users: [],
       orders: [],
+      notifications: [],
       currentUser: null,
       isAuthChecked: false,
       authLoading: false,
@@ -197,9 +246,10 @@ export const useCartStore = create(
           }));
 
           const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+          const createdAt = new Date().toISOString();
           const order = normalizeOrder({
             id: `order-${Date.now()}`,
-            createdAt: new Date().toISOString(),
+            createdAt,
             status: "В обработке",
             total,
             customerName: normalizedName,
@@ -208,8 +258,47 @@ export const useCartStore = create(
             items,
           });
 
+          const sellerGroups = items.reduce((acc, item) => {
+            const key = String(item.sellerId);
+            if (!acc[key]) {
+              acc[key] = [];
+            }
+            acc[key].push(item);
+            return acc;
+          }, {});
+
+          const sellerNotifications = Object.entries(sellerGroups).map(
+            ([sellerId, sellerItems], index) =>
+              normalizeNotification({
+                id: `notification-${Date.now()}-${sellerId}-${index}`,
+                type: "order_created",
+                title: "Новый заказ по вашим товарам",
+                message: `${normalizedName} оформил заказ: ${sellerItems
+                  .map((item) => `${item.name} x${item.qty}`)
+                  .join(", ")}.`,
+                createdAt,
+                isRead: false,
+                orderId: order.id,
+                recipientRole: "seller",
+                recipientSellerId: Number(sellerId),
+              })
+          );
+
+          const buyerNotification = normalizeNotification({
+            id: `notification-${Date.now()}-buyer`,
+            type: "order_created",
+            title: "Заказ оформлен",
+            message: `Ваш заказ #${order.id} принят в обработку.`,
+            createdAt,
+            isRead: false,
+            orderId: order.id,
+            recipientRole: "buyer",
+            recipientUserId: state.currentUser.id,
+          });
+
           return {
             orders: [order, ...state.orders],
+            notifications: [buyerNotification, ...sellerNotifications, ...state.notifications],
             cart: [],
           };
         }),
@@ -220,9 +309,49 @@ export const useCartStore = create(
             return {};
           }
 
+          const order = state.orders.find((item) => item.id === orderId);
+          if (!order) {
+            return {};
+          }
+
+          const statusNotification = normalizeNotification({
+            id: `notification-${Date.now()}-status-${order.id}`,
+            type: "order_status_changed",
+            title: "Статус заказа обновлён",
+            message: `Заказ #${order.id}: новый статус «${status}».`,
+            createdAt: new Date().toISOString(),
+            isRead: false,
+            orderId: order.id,
+            recipientRole: "buyer",
+            recipientUserId: order.customerUserId,
+          });
+
           return {
             orders: state.orders.map((order) =>
               order.id === orderId ? { ...order, status } : order
+            ),
+            notifications: [statusNotification, ...state.notifications],
+          };
+        }),
+
+      markNotificationRead: (notificationId) =>
+        set((state) => ({
+          notifications: state.notifications.map((item) =>
+            item.id === notificationId ? { ...item, isRead: true } : item
+          ),
+        })),
+
+      markAllNotificationsRead: () =>
+        set((state) => {
+          if (!state.currentUser) {
+            return {};
+          }
+
+          return {
+            notifications: state.notifications.map((item) =>
+              isNotificationForUser(item, state.currentUser)
+                ? { ...item, isRead: true }
+                : item
             ),
           };
         }),
@@ -234,6 +363,7 @@ export const useCartStore = create(
         cart: state.cart,
         users: state.users,
         orders: state.orders,
+        notifications: state.notifications,
       }),
       merge: (persistedState, currentState) => ({
         ...currentState,
@@ -241,6 +371,9 @@ export const useCartStore = create(
         users: persistedState?.users ?? [],
         orders: Array.isArray(persistedState?.orders)
           ? persistedState.orders.map(normalizeOrder)
+          : [],
+        notifications: Array.isArray(persistedState?.notifications)
+          ? persistedState.notifications.map(normalizeNotification)
           : [],
         currentUser: null,
         isAuthChecked: false,

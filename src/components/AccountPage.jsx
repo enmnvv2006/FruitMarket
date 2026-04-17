@@ -26,7 +26,14 @@ function badgeClass(status) {
 }
 
 export default function AccountPage() {
-  const { currentUser, orders, updateOrderStatus } = useCart();
+  const {
+    currentUser,
+    orders,
+    notifications,
+    markNotificationRead,
+    markAllNotificationsRead,
+    updateOrderStatus,
+  } = useCart();
   const isSeller = currentUser?.role === "seller";
 
   const visibleOrders = useMemo(() => {
@@ -130,6 +137,42 @@ export default function AccountPage() {
           </div>
         ) : (
           <p className="muted">Заказов пока нет.</p>
+        )}
+      </section>
+
+      <section className="glass-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h3 className="section-title">Уведомления</h3>
+          <button
+            type="button"
+            onClick={markAllNotificationsRead}
+            className="text-xs font-semibold text-[var(--brand)]"
+          >
+            Отметить все прочитанными
+          </button>
+        </div>
+
+        {notifications.length ? (
+          <div className="space-y-2">
+            {notifications.slice(0, 12).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => markNotificationRead(item.id)}
+                className={`w-full rounded-xl border p-3 text-left ${
+                  item.isRead
+                    ? "border-[var(--line)] bg-[var(--surface)]"
+                    : "border-[rgba(63,143,58,0.45)] bg-[var(--surface-soft)]"
+                }`}
+              >
+                <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">{item.message}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">{formatDateTime(item.createdAt)}</p>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">Уведомлений пока нет.</p>
         )}
       </section>
     </div>

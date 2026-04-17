@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useCart } from "../context/CartContext";
 import { CATEGORY_LABELS } from "../data/productCategories";
 
@@ -17,6 +18,11 @@ export default function ProductList({
 }) {
   const { addToCart } = useCart();
 
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    toast.success(`"${product.name}" добавлен в корзину`);
+  };
+
   if (!products.length) {
     return (
       <section className="glass-panel p-8 text-center">
@@ -32,7 +38,7 @@ export default function ProductList({
   }
 
   return (
-    <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <section className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
       {products.map((product) => {
         const outOfStock = product.quantity <= 0;
         const seller = sellersById[product.sellerId];
@@ -40,93 +46,90 @@ export default function ProductList({
         return (
           <article
             key={product.id}
-            className="group glass-panel overflow-hidden transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(31,92,48,0.12)]"
+            className="group product-card p-5 transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(23,55,24,0.1)]"
           >
-            <div className="relative">
-              <img
-                src={product.image}
-                alt={product.name}
-                onError={(event) => {
-                  event.currentTarget.onerror = null;
-                  event.currentTarget.src = FALLBACK_IMAGE;
-                }}
-                className="h-44 w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-              />
-              <span
-                className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
-                  outOfStock
-                    ? "bg-[rgba(181,65,65,0.92)] text-white"
-                    : "bg-[rgba(47,125,68,0.92)] text-white"
-                }`}
-              >
-                {outOfStock ? "Нет в наличии" : `${product.quantity} кг`}
-              </span>
-              <span
-                className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
-                  product.isLabTested
-                    ? "bg-[rgba(35,93,55,0.92)] text-white"
-                    : "bg-[rgba(108,117,125,0.92)] text-white"
-                }`}
-              >
-                {product.isLabTested ? "Лаб. проверен" : "Не проверен"}
-              </span>
-            </div>
-
-            <div className="space-y-3 p-4">
+            <div className="space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-extrabold text-[var(--text)]">{product.name}</h3>
-                  <p className="text-xs text-[var(--muted)]">
-                    {CATEGORY_LABELS[product.category] ?? CATEGORY_LABELS.fruits}
+                  <h3 className="text-3xl font-extrabold leading-none text-[var(--text)]">{product.name}</h3>
+                  <p className="mt-1 text-base text-[var(--muted)]">
+                    Сорт: {CATEGORY_LABELS[product.category] ?? CATEGORY_LABELS.fruits}
                   </p>
+                  <p className="text-sm text-[var(--muted)]">№ {product.batchId}</p>
                 </div>
-                <p className="rounded-lg bg-[var(--surface-soft)] px-2 py-1 text-sm font-bold text-[var(--brand-strong)]">
-                  {product.price} сом
-                </p>
+                <span
+                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                    product.isLabTested
+                      ? "bg-[rgba(63,143,58,0.95)] text-white"
+                      : "bg-[rgba(96,114,85,0.2)] text-[var(--text)]"
+                  }`}
+                >
+                  {product.isLabTested
+                    ? "Лабораторно проверен"
+                    : "Без лабораторной проверки"}
+                </span>
               </div>
 
-              <p className="text-sm leading-6 text-[var(--muted)]">{product.description}</p>
+              <div className="flex justify-center border-y border-[var(--line)] py-3">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = FALLBACK_IMAGE;
+                  }}
+                  className="h-40 w-full max-w-[280px] rounded-2xl object-cover"
+                />
+              </div>
 
-              <div className="flex items-center justify-between border-t border-[var(--line)] pt-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">за 1 кг</p>
-                  {!isSellerView && seller && (
-                    <Link
-                      to={`/seller/${product.sellerId}`}
-                      className="mt-1 inline-block text-xs font-semibold text-[var(--brand)] hover:underline"
-                    >
-                      Продавец: {seller.shopName}
-                    </Link>
-                  )}
-                </div>
-
-                {isSellerView ? (
-                  <div className="flex gap-2">
-                    <Link to={`/product/${product.id}`} className="btn-secondary">
-                      Подробнее
-                    </Link>
-                    <button onClick={() => onEditProduct?.(product)} className="btn-secondary">
-                      Редактировать
-                    </button>
-                    <button onClick={() => onDeleteProduct?.(product.id)} className="btn-danger">
-                      Удалить
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <Link to={`/product/${product.id}`} className="btn-secondary">
-                      Подробнее
-                    </Link>
-                    <button
-                      onClick={() => addToCart(product)}
-                      disabled={outOfStock}
-                      className="btn-primary"
-                    >
-                      В корзину
-                    </button>
-                  </div>
+              <div className="space-y-1 text-base text-[var(--muted)]">
+                <p>
+                  Дата сбора: <span className="font-semibold text-[var(--text)]">{product.receivedAt}</span>
+                </p>
+                <p>
+                  Локация: <span className="font-semibold text-[var(--text)]">{product.source || "Поле №5, Костанай"}</span>
+                </p>
+                {!isSellerView && seller && (
+                  <Link
+                    to={`/seller/${product.sellerId}`}
+                    className="inline-block font-semibold text-[var(--brand)] hover:underline"
+                  >
+                    Продавец: {seller.shopName}
+                  </Link>
                 )}
               </div>
+
+              {isSellerView ? (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <Link to={`/product/${product.id}`} className="btn-secondary text-center">
+                    QR-код
+                  </Link>
+                  <button onClick={() => onEditProduct?.(product)} className="btn-primary">
+                    Найти покупателя
+                  </button>
+                  <button onClick={() => onDeleteProduct?.(product.id)} className="btn-danger">
+                    Удалить
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <Link to={`/product/${product.id}`} className="btn-secondary text-center">
+                    QR-код
+                  </Link>
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    disabled={outOfStock}
+                    className={outOfStock ? "btn-secondary" : "btn-primary"}
+                  >
+                    {outOfStock ? "Нет в наличии" : "Найти покупателя"}
+                  </button>
+                  <Link to={`/product/${product.id}`} className="btn-secondary text-center">
+                    Подробнее
+                  </Link>
+                </div>
+              )}
+
+              <p className="text-sm leading-6 text-[var(--muted)]">{product.description}</p>
             </div>
           </article>
         );

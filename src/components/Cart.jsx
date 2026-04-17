@@ -20,7 +20,8 @@ export default function Cart() {
 
   if (!cart.length) {
     return (
-      <section className="glass-panel p-8 text-center">
+      <section className="glass-panel p-8 text-center sm:p-10">
+        <p className="brand-font text-xs uppercase tracking-[0.2em] text-[var(--brand)]">Cart</p>
         <h2 className="section-title">Корзина пуста</h2>
         <p className="muted mt-1">Добавьте товары из каталога, чтобы оформить заказ.</p>
       </section>
@@ -28,15 +29,21 @@ export default function Cart() {
   }
 
   return (
-    <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.4fr_1fr]">
-      <div className="glass-panel p-4 sm:p-5">
-        <h2 className="section-title mb-4">Корзина</h2>
+    <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.45fr_1fr]">
+      <div className="glass-panel p-4 sm:p-6">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="brand-font text-xs uppercase tracking-[0.2em] text-[var(--brand)]">Checkout</p>
+            <h2 className="section-title">Корзина</h2>
+          </div>
+          <span className="accent-badge">Позиций: {cart.length}</span>
+        </div>
 
         <div className="space-y-3">
           {cart.map((item) => (
             <article
               key={item.id}
-              className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 sm:p-4"
+              className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -50,24 +57,24 @@ export default function Cart() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => updateQty(item.id, item.qty - 1)}
-                    className="btn-secondary px-3 py-1.5"
+                    className="btn-secondary min-h-9 min-w-9 px-0 py-0"
                   >
                     -
                   </button>
                   <span className="min-w-8 text-center text-sm font-semibold">{item.qty}</span>
                   <button
                     onClick={() => updateQty(item.id, item.qty + 1)}
-                    className="btn-secondary px-3 py-1.5"
+                    className="btn-secondary min-h-9 min-w-9 px-0 py-0"
                   >
                     +
                   </button>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <p className="min-w-24 text-right text-sm font-extrabold text-[var(--brand-strong)]">
+                  <p className="min-w-24 rounded-xl bg-[var(--surface-soft)] px-2 py-1 text-right text-sm font-extrabold text-[var(--brand-strong)]">
                     {item.qty * item.price} сом
                   </p>
-                  <button onClick={() => removeFromCart(item.id)} className="btn-danger px-3 py-1.5">
+                  <button onClick={() => removeFromCart(item.id)} className="btn-danger px-3 py-1.5 text-xs sm:text-sm">
                     Удалить
                   </button>
                 </div>
@@ -77,11 +84,11 @@ export default function Cart() {
         </div>
       </div>
 
-      <aside className="glass-panel h-fit p-5">
+      <aside className="glass-panel h-fit p-5 lg:sticky lg:top-24">
         <h3 className="section-title">Оформление</h3>
         <p className="mt-1 text-sm text-[var(--muted)]">Проверьте данные и подтвердите заказ.</p>
 
-        <p className="my-5 rounded-xl bg-[var(--surface-soft)] p-3 text-lg font-extrabold text-[var(--text)]">
+        <p className="my-5 rounded-2xl border border-[rgba(63,143,58,0.24)] bg-[var(--surface-soft)] p-3 text-lg font-extrabold text-[var(--text)]">
           Итого: {cartTotal} сом
         </p>
 
