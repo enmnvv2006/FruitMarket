@@ -526,7 +526,7 @@ function DashboardHeader({ products }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <article className="glass-panel p-5">
+        <article className="glass-panel motion-card motion-delay-1 p-5">
           <p className="text-base font-semibold text-[var(--muted)]">Активные партии</p>
           <p className="mt-2 text-5xl font-extrabold text-[var(--text)]">{stats.items}</p>
           <p className="mt-1 text-sm text-[var(--muted)]">Готовы к продаже</p>
@@ -536,7 +536,7 @@ function DashboardHeader({ products }) {
           <p className="mt-2 text-5xl font-extrabold text-[var(--text)]">{stats.inStock}</p>
           <p className="mt-1 text-sm text-[var(--muted)]">Тонн продукции</p>
         </article>
-        <article className="glass-panel p-5">
+        <article className="glass-panel motion-card motion-delay-2 p-5">
           <p className="text-base font-semibold text-[var(--muted)]">Потенциальная выручка</p>
           <p className="mt-2 text-5xl font-extrabold text-[var(--text)]">{stats.avgPrice}k</p>
           <p className="mt-1 text-sm text-[var(--muted)]">По текущим ценам</p>
@@ -765,7 +765,7 @@ function TrackingPage({ currentUser, products }) {
       </section>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <article className="glass-panel p-5">
+        <article className="glass-panel motion-card motion-delay-3 p-5">
           <div className="flex items-center gap-3">
             <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[rgba(63,143,58,0.14)] text-[var(--brand)]">
               <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2">
@@ -813,7 +813,7 @@ function TrackingPage({ currentUser, products }) {
         </article>
       </section>
 
-      <section className="glass-panel p-5 sm:p-6">
+      <section className="glass-panel motion-card motion-delay-4 p-5 sm:p-6">
         <h2 className="text-2xl font-extrabold text-[var(--text)]">Информация о партии</h2>
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-4">
@@ -844,7 +844,7 @@ function TrackingPage({ currentUser, products }) {
         </div>
       </section>
 
-      <section className="glass-panel p-5 sm:p-6">
+      <section className="glass-panel motion-card motion-delay-4 p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-2xl font-extrabold text-[var(--text)]">История перемещений</h2>
           <Link to={productLink} className="btn-secondary">
@@ -908,21 +908,21 @@ function AnalyticsPage({ currentUser, products }) {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <article className="glass-panel p-5">
+        <article className="glass-panel motion-card motion-delay-1 p-5">
           <p className="text-xl text-[var(--muted)]">Выручка (месяц)</p>
           <p className="mt-2 text-5xl font-extrabold leading-none text-[var(--text)]">
             {Math.max(850, Math.round(monthlyRevenue / 1000))} тыс. ₸
           </p>
           <p className="mt-3 text-2xl font-semibold text-[var(--brand)]">↗ +18% vs май</p>
         </article>
-        <article className="glass-panel p-5">
+        <article className="glass-panel motion-card motion-delay-2 p-5">
           <p className="text-xl text-[var(--muted)]">Продано (тонн)</p>
           <p className="mt-2 text-5xl font-extrabold leading-none text-[var(--text)]">
             {Math.max(155, soldTons)}
           </p>
           <p className="mt-3 text-2xl font-semibold text-[var(--brand)]">↗ +12% vs май</p>
         </article>
-        <article className="glass-panel p-5">
+        <article className="glass-panel motion-card motion-delay-3 p-5">
           <p className="text-xl text-[var(--muted)]">Средняя цена</p>
           <p className="mt-2 text-5xl font-extrabold leading-none text-[var(--text)]">
             {Math.max(5.5, avgPrice / 1000).toFixed(1)} тыс. ₸
@@ -932,7 +932,7 @@ function AnalyticsPage({ currentUser, products }) {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <article className="glass-panel p-5 sm:p-6">
+        <article className="glass-panel motion-card motion-delay-4 p-5 sm:p-6">
           <h2 className="text-2xl font-extrabold text-[var(--text)]">Продажи по культурам (тонны)</h2>
           <div className="mt-5 overflow-x-auto">
             <div className="min-w-[620px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
@@ -941,16 +941,25 @@ function AnalyticsPage({ currentUser, products }) {
                   <div key={month} className="flex flex-col items-center gap-2">
                     <div className="flex h-[260px] items-end gap-1">
                       <span
-                        className="w-3 rounded-t-md bg-[rgba(48,135,56,0.95)]"
-                        style={{ height: `${(wheatSeries[index] / maxValue) * 240}px` }}
+                        className="chart-bar w-3 rounded-t-md bg-[rgba(48,135,56,0.95)]"
+                        style={{
+                          height: `${(wheatSeries[index] / maxValue) * 240}px`,
+                          animationDelay: `${80 + index * 70}ms`,
+                        }}
                       />
                       <span
-                        className="w-3 rounded-t-md bg-[rgba(101,187,111,0.95)]"
-                        style={{ height: `${(barleySeries[index] / maxValue) * 240}px` }}
+                        className="chart-bar w-3 rounded-t-md bg-[rgba(101,187,111,0.95)]"
+                        style={{
+                          height: `${(barleySeries[index] / maxValue) * 240}px`,
+                          animationDelay: `${120 + index * 70}ms`,
+                        }}
                       />
                       <span
-                        className="w-3 rounded-t-md bg-[rgba(245,168,37,0.95)]"
-                        style={{ height: `${(sunflowerSeries[index] / maxValue) * 240}px` }}
+                        className="chart-bar w-3 rounded-t-md bg-[rgba(245,168,37,0.95)]"
+                        style={{
+                          height: `${(sunflowerSeries[index] / maxValue) * 240}px`,
+                          animationDelay: `${160 + index * 70}ms`,
+                        }}
                       />
                     </div>
                     <p className="text-sm font-semibold text-[var(--muted)]">{month}</p>
@@ -966,13 +975,13 @@ function AnalyticsPage({ currentUser, products }) {
           </div>
         </article>
 
-        <article className="glass-panel p-5 sm:p-6">
+        <article className="glass-panel motion-card motion-delay-4 p-5 sm:p-6">
           <h2 className="text-2xl font-extrabold text-[var(--text)]">Распределение по культурам (%)</h2>
           <div className="mt-6 flex flex-col items-center gap-4">
             <svg viewBox="0 0 200 200" className="h-[280px] w-[280px]">
-              <circle cx="100" cy="100" r="80" fill="transparent" stroke="#2f8438" strokeWidth="40" strokeDasharray="301.59 201.06" strokeDashoffset="0" />
-              <circle cx="100" cy="100" r="80" fill="transparent" stroke="#66ba6f" strokeWidth="40" strokeDasharray="125.66 377.00" strokeDashoffset="-301.59" />
-              <circle cx="100" cy="100" r="80" fill="transparent" stroke="#f4a623" strokeWidth="40" strokeDasharray="75.40 427.26" strokeDashoffset="-427.25" />
+              <circle className="pie-slice" cx="100" cy="100" r="80" fill="transparent" stroke="#2f8438" strokeWidth="40" strokeDasharray="301.59 201.06" strokeDashoffset="0" style={{ animationDelay: "120ms" }} />
+              <circle className="pie-slice" cx="100" cy="100" r="80" fill="transparent" stroke="#66ba6f" strokeWidth="40" strokeDasharray="125.66 377.00" strokeDashoffset="-301.59" style={{ animationDelay: "220ms" }} />
+              <circle className="pie-slice" cx="100" cy="100" r="80" fill="transparent" stroke="#f4a623" strokeWidth="40" strokeDasharray="75.40 427.26" strokeDashoffset="-427.25" style={{ animationDelay: "320ms" }} />
             </svg>
             <div className="grid w-full grid-cols-1 gap-2 text-lg sm:text-xl">
               <p className="font-semibold text-[rgba(48,135,56,0.95)]">Пшеница: 60%</p>

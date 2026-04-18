@@ -69,6 +69,39 @@ body {
   }
 }
 
+@keyframes card-float-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bar-rise {
+  from {
+    transform: scaleY(0.08);
+    opacity: 0.25;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pie-pop {
+  from {
+    transform: scale(0.88);
+    opacity: 0.2;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 @layer components {
   .shell {
     @apply mx-auto w-full max-w-6xl px-4;
@@ -127,6 +160,42 @@ body {
 
   .accent-badge {
     @apply inline-flex items-center rounded-full border border-[rgba(240,176,74,0.4)] bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-semibold text-[rgba(130,87,10,1)];
+  }
+
+  .motion-card {
+    animation: card-float-in 0.52s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .motion-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 30px rgba(23, 55, 24, 0.12);
+  }
+
+  .motion-delay-1 {
+    animation-delay: 0.06s;
+  }
+
+  .motion-delay-2 {
+    animation-delay: 0.12s;
+  }
+
+  .motion-delay-3 {
+    animation-delay: 0.18s;
+  }
+
+  .motion-delay-4 {
+    animation-delay: 0.24s;
+  }
+
+  .chart-bar {
+    transform-origin: center bottom;
+    animation: bar-rise 0.85s cubic-bezier(0.17, 0.84, 0.44, 1) both;
+  }
+
+  .pie-slice {
+    transform-origin: 100px 100px;
+    animation: pie-pop 0.72s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 }
 
