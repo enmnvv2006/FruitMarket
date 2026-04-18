@@ -16,6 +16,8 @@ const DB_PATH =
   process.env.AUTH_DB_PATH || path.join(__dirname, "data", "auth-db.json");
 const DB_EXAMPLE_PATH =
   process.env.AUTH_DB_EXAMPLE_PATH || path.join(__dirname, "data", "auth-db.example.json");
+const FALLBACK_DB_PATH = "/tmp/auth-db.json";
+let activeDbPath = DB_PATH;
 
 const app = express();
 const PORT = Number(process.env.PORT || process.env.AUTH_SERVER_PORT || 4000);
@@ -103,13 +105,22 @@ function sanitizeUser(user) {
 
 async function readDb() {
   try {
-    await fs.access(DB_PATH);
+    await fs.mkdir(path.dirname(activeDbPath), { recursive: true });
+    await fs.writeFile(path.join(path.dirname(activeDbPath), ".write-test"), "", "utf8");
+    await fs.unlink(path.join(path.dirname(activeDbPath), ".write-test"));
   } catch {
-    const fallback = await fs.readFile(DB_EXAMPLE_PATH, "utf8");
-    await fs.writeFile(DB_PATH, fallback, "utf8");
+    activeDbPath = FALLBACK_DB_PATH;
+    await fs.mkdir(path.dirname(activeDbPath), { recursive: true });
   }
 
-  const raw = await fs.readFile(DB_PATH, "utf8");
+  try {
+    await fs.access(activeDbPath);
+  } catch {
+    const fallback = await fs.readFile(DB_EXAMPLE_PATH, "utf8");
+    await fs.writeFile(activeDbPath, fallback, "utf8");
+  }
+
+  const raw = await fs.readFile(activeDbPath, "utf8");
   const parsed = JSON.parse(raw);
 
   return {
@@ -121,7 +132,7 @@ async function readDb() {
 }
 
 async function writeDb(db) {
-  await fs.writeFile(DB_PATH, `${JSON.stringify(db, null, 2)}\n`, "utf8");
+  await fs.writeFile(activeDbPath, `${JSON.stringify(db, null, 2)}\n`, "utf8");
 }
 
 function buildSellerUser(sellerId) {
