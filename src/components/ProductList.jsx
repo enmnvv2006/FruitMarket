@@ -49,7 +49,7 @@ export default function ProductList({
             className="group product-card p-5 transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(23,55,24,0.1)]"
           >
             <div className="space-y-3">
-              <div className="flex items-start justify-between gap-3">
+              <div>
                 <div>
                   <h3 className="text-3xl font-extrabold leading-none text-[var(--text)]">
                     {product.name}
@@ -63,17 +63,6 @@ export default function ProductList({
                     № {product.batchId}
                   </p>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                    product.isLabTested
-                      ? "bg-[rgba(63,143,58,0.95)] text-white"
-                      : "bg-[rgba(96,114,85,0.2)] text-[var(--text)]"
-                  }`}
-                >
-                  {product.isLabTested
-                    ? "Лабораторно проверен"
-                    : "Без лабораторной проверки"}
-                </span>
               </div>
 
               <div className="flex justify-center border-y border-[var(--line)] py-3">
@@ -112,18 +101,12 @@ export default function ProductList({
               </div>
 
               {isSellerView ? (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Link
-                    to={`/product/${product.id}`}
-                    className="btn-secondary text-center"
-                  >
-                    QR-код
-                  </Link>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <button
                     onClick={() => onEditProduct?.(product)}
                     className="btn-primary"
                   >
-                    Найти покупателя
+                    Добавить в корзину
                   </button>
                   <button
                     onClick={() => onDeleteProduct?.(product.id)}
@@ -133,19 +116,13 @@ export default function ProductList({
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Link
-                    to={`/product/${product.id}`}
-                    className="btn-secondary text-center"
-                  >
-                    QR-код
-                  </Link>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <button
                     onClick={() => handleAddToCart(product)}
                     disabled={outOfStock}
                     className={outOfStock ? "btn-secondary" : "btn-primary"}
                   >
-                    {outOfStock ? "Нет в наличии" : "Найти покупателя"}
+                    {outOfStock ? "Нет в наличии" : "Добавить в корзину"}
                   </button>
                   <Link
                     to={`/product/${product.id}`}
