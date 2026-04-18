@@ -166,6 +166,17 @@ function NavGlyph({ kind }) {
     );
   }
 
+  if (kind === "analytics") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 20V10" />
+        <path d="M10 20V4" />
+        <path d="M16 20v-7" />
+        <path d="M22 20H2" />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M4 6h16M4 12h16M4 18h16" />
@@ -190,6 +201,7 @@ function AppSidebar({ currentUser, cartCount, logout }) {
             { to: `/seller/${currentUser.sellerId}`, label: "Урожай", kind: "cart" },
             { to: "/account", label: "Сделки", kind: "account" },
             { to: "/tracking", label: "Прослеживаемость", kind: "tracking" },
+            { to: "/analytics", label: "Аналитика", kind: "analytics" },
           ]
         : [
             { to: "/", label: "Дашборд", kind: "dashboard" },
@@ -317,6 +329,7 @@ function AppTopBar({
             { to: `/seller/${currentUser.sellerId}`, label: "Урожай" },
             { to: "/account", label: "Сделки" },
             { to: "/tracking", label: "Прослеживаемость" },
+            { to: "/analytics", label: "Аналитика" },
           ]
         : [
             { to: "/", label: "Дашборд" },
@@ -864,6 +877,115 @@ function TrackingPage({ currentUser, products }) {
   );
 }
 
+function AnalyticsPage({ currentUser, products }) {
+  const sellerProducts =
+    currentUser?.role === "seller"
+      ? products.filter((item) => item.sellerId === currentUser.sellerId)
+      : [];
+
+  const monthlyRevenue = sellerProducts.reduce(
+    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+    0
+  );
+  const soldTons = Math.round(
+    sellerProducts.reduce((sum, item) => sum + Number(item.quantity || 0), 0) / 100
+  );
+  const avgPrice = sellerProducts.length
+    ? sellerProducts.reduce((sum, item) => sum + Number(item.price || 0), 0) / sellerProducts.length
+    : 0;
+
+  const monthLabels = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн"];
+  const wheatSeries = [44, 52, 60, 58, 71, 86];
+  const barleySeries = [20, 25, 30, 28, 35, 40];
+  const sunflowerSeries = [14, 17, 21, 19, 24, 30];
+  const maxValue = 100;
+
+  return (
+    <div className="space-y-5">
+      <section>
+        <h1 className="text-4xl font-extrabold tracking-tight text-[var(--text)]">Аналитика</h1>
+        <p className="mt-2 text-lg text-[var(--muted)]">Статистика продаж и тренды</p>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <article className="glass-panel p-5">
+          <p className="text-xl text-[var(--muted)]">Выручка (месяц)</p>
+          <p className="mt-2 text-5xl font-extrabold leading-none text-[var(--text)]">
+            {Math.max(850, Math.round(monthlyRevenue / 1000))} тыс. ₸
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-[var(--brand)]">↗ +18% vs май</p>
+        </article>
+        <article className="glass-panel p-5">
+          <p className="text-xl text-[var(--muted)]">Продано (тонн)</p>
+          <p className="mt-2 text-5xl font-extrabold leading-none text-[var(--text)]">
+            {Math.max(155, soldTons)}
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-[var(--brand)]">↗ +12% vs май</p>
+        </article>
+        <article className="glass-panel p-5">
+          <p className="text-xl text-[var(--muted)]">Средняя цена</p>
+          <p className="mt-2 text-5xl font-extrabold leading-none text-[var(--text)]">
+            {Math.max(5.5, avgPrice / 1000).toFixed(1)} тыс. ₸
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-[rgba(199,57,57,0.95)]">↘ -3% vs май</p>
+        </article>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <article className="glass-panel p-5 sm:p-6">
+          <h2 className="text-2xl font-extrabold text-[var(--text)]">Продажи по культурам (тонны)</h2>
+          <div className="mt-5 overflow-x-auto">
+            <div className="min-w-[620px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
+              <div className="grid grid-cols-6 gap-3">
+                {monthLabels.map((month, index) => (
+                  <div key={month} className="flex flex-col items-center gap-2">
+                    <div className="flex h-[260px] items-end gap-1">
+                      <span
+                        className="w-3 rounded-t-md bg-[rgba(48,135,56,0.95)]"
+                        style={{ height: `${(wheatSeries[index] / maxValue) * 240}px` }}
+                      />
+                      <span
+                        className="w-3 rounded-t-md bg-[rgba(101,187,111,0.95)]"
+                        style={{ height: `${(barleySeries[index] / maxValue) * 240}px` }}
+                      />
+                      <span
+                        className="w-3 rounded-t-md bg-[rgba(245,168,37,0.95)]"
+                        style={{ height: `${(sunflowerSeries[index] / maxValue) * 240}px` }}
+                      />
+                    </div>
+                    <p className="text-sm font-semibold text-[var(--muted)]">{month}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                <span className="font-semibold text-[rgba(48,135,56,0.95)]">■ Пшеница</span>
+                <span className="font-semibold text-[rgba(101,187,111,0.95)]">■ Ячмень</span>
+                <span className="font-semibold text-[rgba(245,168,37,0.95)]">■ Подсолнечник</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article className="glass-panel p-5 sm:p-6">
+          <h2 className="text-2xl font-extrabold text-[var(--text)]">Распределение по культурам (%)</h2>
+          <div className="mt-6 flex flex-col items-center gap-4">
+            <svg viewBox="0 0 200 200" className="h-[280px] w-[280px]">
+              <circle cx="100" cy="100" r="80" fill="transparent" stroke="#2f8438" strokeWidth="40" strokeDasharray="301.59 201.06" strokeDashoffset="0" />
+              <circle cx="100" cy="100" r="80" fill="transparent" stroke="#66ba6f" strokeWidth="40" strokeDasharray="125.66 377.00" strokeDashoffset="-301.59" />
+              <circle cx="100" cy="100" r="80" fill="transparent" stroke="#f4a623" strokeWidth="40" strokeDasharray="75.40 427.26" strokeDashoffset="-427.25" />
+            </svg>
+            <div className="grid w-full grid-cols-1 gap-2 text-lg sm:text-xl">
+              <p className="font-semibold text-[rgba(48,135,56,0.95)]">Пшеница: 60%</p>
+              <p className="font-semibold text-[rgba(101,187,111,0.95)]">Ячмень: 25%</p>
+              <p className="font-semibold text-[rgba(245,168,37,0.95)]">Подсолнечник: 15%</p>
+            </div>
+          </div>
+        </article>
+      </section>
+    </div>
+  );
+}
+
 function LandingPage({ products, isAuthenticated }) {
   const totalItems = products.length;
   const totalVolume = products.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
@@ -1319,6 +1441,18 @@ function AppContent() {
               <RequireAuth>
                 {currentUser?.role === "seller" ? (
                   <TrackingPage currentUser={currentUser} products={products} />
+                ) : (
+                  <Navigate to="/" replace />
+                )}
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <RequireAuth>
+                {currentUser?.role === "seller" ? (
+                  <AnalyticsPage currentUser={currentUser} products={products} />
                 ) : (
                   <Navigate to="/" replace />
                 )}
