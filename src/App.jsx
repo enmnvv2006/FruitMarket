@@ -1104,14 +1104,15 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
   const wheat = [42, 41, 44, 44, 46, 47];
   const apples = [85, 84, 90, 89, 94, 95];
   const potato = [35, 34, 37, 36, 39, 40];
-  const mapImageUrl = `${import.meta.env.BASE_URL}kyrgyzstan-adm-location-map.svg`;
   const regionMap = [
     {
       id: "talas",
       name: "Таласская область",
+      shortName: "Талас",
       hotspot:
-        "240,260 360,220 430,290 380,360 260,360 210,300",
-      label: { x: 320, y: 300 },
+        "210,180 290,130 420,120 540,150 590,210 560,260 470,280 350,270 250,240 190,210",
+      label: { x: 360, y: 200 },
+      color: "#e8751a",
       productionKtons: 102,
       farmers: 614,
       deals: 186,
@@ -1120,9 +1121,11 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
     {
       id: "chui",
       name: "Чуйская область",
+      shortName: "Чуй",
       hotspot:
-        "430,250 690,180 860,220 900,300 760,350 560,340 430,300",
-      label: { x: 650, y: 285 },
+        "560,130 700,110 850,120 940,150 980,210 930,250 820,260 700,250 600,230 560,190",
+      label: { x: 760, y: 190 },
+      color: "#1e5faa",
       productionKtons: 224,
       farmers: 1308,
       deals: 471,
@@ -1131,9 +1134,11 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
     {
       id: "issyk-kul",
       name: "Иссык-Кульская область",
+      shortName: "Иссык-Куль",
       hotspot:
-        "900,240 1180,210 1400,260 1460,320 1360,380 1100,370 950,340",
-      label: { x: 1145, y: 305 },
+        "940,150 1090,110 1290,105 1460,130 1510,190 1480,250 1390,300 1240,310 1100,300 980,250",
+      label: { x: 1240, y: 220 },
+      color: "#e1122a",
       productionKtons: 141,
       farmers: 922,
       deals: 305,
@@ -1142,9 +1147,11 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
     {
       id: "jalal-abad",
       name: "Джалал-Абадская область",
+      shortName: "Джалал-Абад",
       hotspot:
-        "380,400 560,340 760,350 840,430 760,540 560,530 420,500 350,450",
-      label: { x: 610, y: 445 },
+        "190,220 260,250 360,270 500,280 620,270 720,300 760,360 730,430 620,470 500,470 390,450 290,420 220,360 170,300",
+      label: { x: 500, y: 355 },
+      color: "#d91b8e",
       productionKtons: 186,
       farmers: 1420,
       deals: 523,
@@ -1153,9 +1160,11 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
     {
       id: "naryn",
       name: "Нарынская область",
+      shortName: "Нарын",
       hotspot:
-        "760,350 960,340 1180,390 1180,520 980,540 840,510 780,430",
-      label: { x: 970, y: 450 },
+        "720,280 840,260 980,260 1100,280 1220,300 1290,350 1300,430 1240,510 1120,560 980,580 860,560 780,510 740,430 720,360",
+      label: { x: 980, y: 420 },
+      color: "#138f3b",
       productionKtons: 133,
       farmers: 844,
       deals: 277,
@@ -1164,9 +1173,11 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
     {
       id: "osh",
       name: "Ошская область",
+      shortName: "Ош",
       hotspot:
-        "760,540 980,540 1180,520 1320,560 1250,650 980,640 860,620",
-      label: { x: 1025, y: 590 },
+        "560,470 640,450 760,430 860,440 940,500 980,580 940,660 840,730 720,760 620,730 560,660 520,590 520,530",
+      label: { x: 760, y: 600 },
+      color: "#e5a92d",
       productionKtons: 208,
       farmers: 1678,
       deals: 618,
@@ -1175,9 +1186,11 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
     {
       id: "batken",
       name: "Баткенская область",
+      shortName: "Баткен",
       hotspot:
-        "330,530 560,530 760,540 860,620 700,680 530,700 360,650",
-      label: { x: 565, y: 620 },
+        "120,560 220,540 320,540 420,560 500,600 520,650 470,700 380,720 270,710 180,690 120,650 90,610",
+      label: { x: 300, y: 630 },
+      color: "#6c318f",
       productionKtons: 161,
       farmers: 1189,
       deals: 404,
@@ -1308,15 +1321,6 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
               viewBox="0 0 1644 829"
               className="h-[360px] w-full rounded-xl border border-[var(--line)] bg-[#eef3ea]"
             >
-              <image
-                href={mapImageUrl}
-                x="0"
-                y="0"
-                width="1644"
-                height="829"
-                preserveAspectRatio="xMidYMid meet"
-                style={{ pointerEvents: "none" }}
-              />
               {regionMap.map((region) => {
                 const isActive = region.id === selectedRegion.id;
                 return (
@@ -1327,21 +1331,22 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
                   >
                     <polygon
                       points={region.hotspot}
-                      fill={isActive ? "rgba(31,110,46,0.38)" : "rgba(47,132,56,0.12)"}
-                      stroke={isActive ? "#174224" : "rgba(23,66,36,0.35)"}
-                      strokeWidth={isActive ? 4 : 2}
+                      fill={region.color}
+                      fillOpacity={isActive ? 1 : 0.92}
+                      stroke={isActive ? "#173020" : "#f4f7f2"}
+                      strokeWidth={isActive ? 5 : 3}
                       className="transition-all duration-200"
                     />
                     <text
                       x={region.label.x}
                       y={region.label.y}
                       textAnchor="middle"
-                      fontSize="32"
+                      fontSize="44"
                       fontWeight="800"
-                      fill={isActive ? "#10331c" : "#1f3e2a"}
+                      fill={isActive ? "#ffffff" : "rgba(255,255,255,0.88)"}
                       className="pointer-events-none select-none"
                     >
-                      {region.name.replace("ская область", "")}
+                      {region.shortName}
                     </text>
                   </g>
                 );
@@ -1465,107 +1470,275 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
 }
 
 function LandingPage({ products, isAuthenticated }) {
-  const totalItems = products.length;
-  const totalVolume = products.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
-  const avgPrice = totalItems
-    ? Math.round(products.reduce((sum, item) => sum + (Number(item.price) || 0), 0) / totalItems)
-    : 0;
+  const workflowSteps = [
+    {
+      id: "01",
+      icon: "◌",
+      title: "Регистрация и выбор роли",
+      description: "Фермер или оптовик — создайте профиль за 2 минуты",
+    },
+    {
+      id: "02",
+      icon: "◈",
+      title: "Разместите продукцию / Найдите поставщиков",
+      description: "Фермер добавляет урожай в каталог, оптовик ищет нужные позиции",
+    },
+    {
+      id: "03",
+      icon: "⌗",
+      title: "QR-код и отслеживание",
+      description: "Каждая партия получает уникальный QR-код для полной прослеживаемости",
+    },
+    {
+      id: "04",
+      icon: "◎",
+      title: "Сделка и аналитика",
+      description: "Прямой запрос, подтверждение, отгрузка — и вы видите статистику продаж",
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-[28px] border border-[rgba(63,143,58,0.18)] bg-[linear-gradient(135deg,#163923_0%,#1f4f2b_54%,#2d6f39_100%)] px-5 py-8 text-white shadow-[0_28px_56px_rgba(12,35,18,0.32)] sm:px-8 sm:py-10">
-        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[rgba(240,176,74,0.2)] blur-2xl" />
-        <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-[rgba(255,255,255,0.08)] blur-2xl" />
+    <div className="pt-[86px]">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-[rgba(18,52,28,0.08)] bg-white shadow-[0_6px_18px_rgba(16,24,18,0.08)]">
+        <div className="mx-auto flex h-[78px] w-full max-w-[1200px] items-center justify-between px-4 sm:h-[86px] sm:px-8">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#196b33] text-2xl font-black text-white sm:h-12 sm:w-12 sm:text-3xl">
+              A
+            </div>
+            <span className="text-3xl font-extrabold tracking-tight text-[#2a2d31] sm:text-4xl">Aykyn Charba</span>
+          </div>
+          <Link
+            to="/auth"
+            className="rounded-full border-[3px] border-[#196b33] px-5 py-2 text-xl font-bold text-[#196b33] transition hover:bg-[rgba(25,107,51,0.08)] sm:px-6 sm:text-2xl"
+          >
+            Войти
+          </Link>
+        </div>
+      </header>
 
-        <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[rgba(224,244,217,0.86)]">
-              Farm Ops Platform
-            </p>
-            <h1 className="mt-3 text-4xl font-extrabold leading-[1.06] sm:text-5xl">
-              Управляйте фермой
-              <br />
-              в одном рабочем месте
-            </h1>
-            <p className="mt-4 max-w-2xl text-base text-[rgba(234,245,230,0.92)] sm:text-lg">
-              Учет партий, поставок, заказов и продаж в едином интерфейсе для команды, продавцов и
-              покупателей.
-            </p>
+      <section className="bg-[#e9eee6] pb-8 pt-5 sm:pb-10 sm:pt-6">
+        <div className="mx-auto w-full max-w-[1700px] px-4 sm:px-5">
+          <div className="overflow-hidden rounded-[42px] bg-[linear-gradient(104deg,#124d2a_0%,#135a30_38%,#2f7b39_100%)] p-7 sm:p-9 lg:p-10">
+            <div className="grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:gap-9">
+              <div className="max-w-[760px]">
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-[rgba(223,242,226,0.88)] lg:text-base">
+                  Farm Ops Platform
+                </p>
+                <h1 className="mt-4 text-4xl font-black leading-[1.04] text-white sm:text-5xl lg:text-[76px]">
+                  Управляйте фермой
+                  <br />
+                  в одном рабочем месте
+                </h1>
+                <p className="mt-5 max-w-[900px] text-lg font-medium leading-relaxed text-[rgba(234,247,237,0.88)] sm:text-[33px] lg:text-[44px]">
+                  Учет партий, поставок, заказов и продаж в едином интерфейсе для команды, продавцов и покупателей.
+                </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link to={isAuthenticated ? "/" : "/auth"} className="rounded-2xl bg-[var(--accent)] px-5 py-3 text-sm font-bold text-[#3b2600] transition hover:brightness-95">
-                {isAuthenticated ? "Открыть каталог" : "Начать работу"}
-              </Link>
-              <Link to={isAuthenticated ? "/account" : "/auth"} className="rounded-2xl border border-[rgba(224,244,217,0.45)] bg-[rgba(255,255,255,0.06)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[rgba(255,255,255,0.12)]">
-                {isAuthenticated ? "Личный кабинет" : "Войти в аккаунт"}
-              </Link>
+                <div className="mt-8 flex flex-wrap gap-3 sm:mt-9">
+                  <Link
+                    to="/auth"
+                    className="rounded-[20px] bg-[#f2b44a] px-8 py-3 text-lg font-bold text-[#2e2b1f] transition hover:brightness-105 sm:px-10 sm:text-xl"
+                  >
+                    Начать работу
+                  </Link>
+                  <Link
+                    to="/auth"
+                    className="rounded-[20px] border-2 border-[rgba(216,235,221,0.42)] bg-[rgba(20,67,35,0.36)] px-8 py-3 text-lg font-bold text-[rgba(239,248,242,0.95)] transition hover:bg-[rgba(21,76,38,0.5)] sm:px-10 sm:text-xl"
+                  >
+                    Войти в аккаунт
+                  </Link>
+                </div>
+              </div>
+
+              <div className="grid gap-4 self-end">
+                <article className="rounded-[30px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-6 sm:py-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(220,238,225,0.9)] sm:text-sm">Партии</p>
+                  <p className="mt-2 text-4xl font-black text-white sm:text-5xl">46</p>
+                  <p className="text-lg text-[rgba(234,248,239,0.9)] sm:text-2xl">В активном каталоге</p>
+                </article>
+                <article className="rounded-[30px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-6 sm:py-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(220,238,225,0.9)] sm:text-sm">Объём</p>
+                  <p className="mt-2 text-4xl font-black text-white sm:text-5xl">858 кг</p>
+                  <p className="text-lg text-[rgba(234,248,239,0.9)] sm:text-2xl">Актуальные остатки</p>
+                </article>
+                <article className="rounded-[30px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-6 sm:py-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(220,238,225,0.9)] sm:text-sm">Средняя цена</p>
+                  <p className="mt-2 text-4xl font-black text-white sm:text-5xl">255 сом</p>
+                  <p className="text-lg text-[rgba(234,248,239,0.9)] sm:text-2xl">За килограмм</p>
+                </article>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            <article className="rounded-2xl border border-[rgba(224,244,217,0.25)] bg-[rgba(255,255,255,0.07)] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-[rgba(224,244,217,0.8)]">Партии</p>
-              <p className="mt-2 text-3xl font-extrabold">{totalItems}</p>
-              <p className="mt-1 text-sm text-[rgba(224,244,217,0.88)]">В активном каталоге</p>
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            <article className="rounded-[32px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#4e944f] sm:text-base">Процессы</p>
+              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-4xl">Управление задачами и урожаем</h3>
+              <p className="mt-3 text-lg leading-relaxed text-[#5b6d5f] sm:text-2xl">
+                Планируйте работы по полям, фиксируйте партии и держите всю операционку в одном месте без таблиц.
+              </p>
             </article>
-            <article className="rounded-2xl border border-[rgba(224,244,217,0.25)] bg-[rgba(255,255,255,0.07)] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-[rgba(224,244,217,0.8)]">Объём</p>
-              <p className="mt-2 text-3xl font-extrabold">{totalVolume} кг</p>
-              <p className="mt-1 text-sm text-[rgba(224,244,217,0.88)]">Актуальные остатки</p>
+            <article className="rounded-[32px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#4e944f] sm:text-base">Продажи</p>
+              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-4xl">Заказы и покупатели</h3>
+              <p className="mt-3 text-lg leading-relaxed text-[#5b6d5f] sm:text-2xl">
+                Принимайте заказы, отслеживайте статусы и работайте с клиентами через единый поток уведомлений.
+              </p>
             </article>
-            <article className="rounded-2xl border border-[rgba(224,244,217,0.25)] bg-[rgba(255,255,255,0.07)] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-[rgba(224,244,217,0.8)]">Средняя цена</p>
-              <p className="mt-2 text-3xl font-extrabold">{avgPrice} сом</p>
-              <p className="mt-1 text-sm text-[rgba(224,244,217,0.88)]">За килограмм</p>
+            <article className="rounded-[32px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#4e944f] sm:text-base">Прозрачность</p>
+              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-4xl">Трассировка партий по QR</h3>
+              <p className="mt-3 text-lg leading-relaxed text-[#5b6d5f] sm:text-2xl">
+                Каждая партия доступна по QR-коду с ключевыми данными: источник, дата поступления и логистика.
+              </p>
+            </article>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-4 rounded-[32px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#4e944f] sm:text-base">Готовы начать</p>
+              <h3 className="mt-2 text-4xl font-black leading-tight text-[#213126] sm:text-5xl">
+                Запустите цифровой контур вашей фермы
+              </h3>
+              <p className="mt-2 text-lg leading-relaxed text-[#5b6d5f] sm:text-2xl">
+                Регистрация занимает меньше минуты, после входа откроется каталог и рабочие разделы.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/auth"
+                className="rounded-full bg-[#2f943f] px-6 py-3 text-lg font-bold text-white transition hover:brightness-105 sm:px-9 sm:text-xl"
+              >
+                Регистрация / Вход
+              </Link>
+              <Link
+                to="/auth"
+                className="rounded-full border-2 border-[rgba(43,132,55,0.24)] bg-white px-6 py-3 text-lg font-bold text-[#2a3b2f] transition hover:bg-[#f7faf7] sm:px-9 sm:text-xl"
+              >
+                Открыть авторизацию
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="problem-solution" className="bg-[#efefef] pb-14 sm:pb-16">
+        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 gap-6 px-4 pt-10 sm:px-8 sm:pt-12 lg:grid-cols-2">
+          <article className="flex h-full flex-col rounded-[26px] bg-[#f6f6f6] p-7 shadow-[0_10px_24px_rgba(16,24,18,0.1)] sm:p-8">
+            <span className="inline-flex w-fit rounded-full bg-[#f0dfd3] px-4 py-1.5 text-xl font-bold text-[#ed934a] sm:text-2xl">
+              Проблема
+            </span>
+            <h3 className="mt-5 text-[42px] font-black leading-[1.08] tracking-tight text-[#2a2d31] sm:text-[48px] lg:text-[56px]">
+              Традиционные методы не работают
+            </h3>
+
+            <ul className="mt-6 space-y-4 text-lg text-[#6b6f74] sm:text-xl">
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#f5d9dd] text-3xl font-bold leading-none text-[#ee3d4f]">×</span>
+                <span>Непрозрачные цены и посредники снижают доход</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#f5d9dd] text-3xl font-bold leading-none text-[#ee3d4f]">×</span>
+                <span>Потери урожая из-за сложности поиска покупателей</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#f5d9dd] text-3xl font-bold leading-none text-[#ee3d4f]">×</span>
+                <span>Отсутствие контроля и прослеживаемости</span>
+              </li>
+            </ul>
+          </article>
+
+          <article className="flex h-full flex-col rounded-[26px] bg-[#f6f6f6] p-7 shadow-[0_10px_24px_rgba(16,24,18,0.1)] sm:p-8">
+            <span className="inline-flex w-fit rounded-full bg-[#d8e3db] px-4 py-1.5 text-xl font-bold text-[#1d6c36] sm:text-2xl">
+              Решение
+            </span>
+            <h3 className="mt-5 text-[42px] font-black leading-[1.08] tracking-tight text-[#2a2d31] sm:text-[48px] lg:text-[56px]">
+              Aykyn Charba - цифровая прозрачность
+            </h3>
+
+            <ul className="mt-6 space-y-4 text-lg text-[#6b6f74] sm:text-xl">
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1d6c36] text-xl font-bold text-white">✓</span>
+                <span>Прямой доступ к рынку без посредников</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1d6c36] text-xl font-bold text-white">✓</span>
+                <span>QR-прослеживаемость от поля до прилавка</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1d6c36] text-xl font-bold text-white">✓</span>
+                <span>Аналитика продаж и управление заказами</span>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="key-advantages" className="bg-[#f3f3f3] py-14 sm:py-16">
+        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-8">
+          <div className="text-center">
+            <h2 className="text-4xl font-black tracking-tight text-[#2a2d31] sm:text-5xl">Ключевые преимущества</h2>
+            <div className="mx-auto mt-4 h-1.5 w-32 rounded-full bg-[#e7a65a]" />
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <article className="rounded-[22px] bg-[#f8f8f8] p-6 shadow-[0_10px_24px_rgba(16,24,18,0.1)]">
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#dbe3de] text-5xl text-[#1f6f38]">
+                $
+              </div>
+              <h3 className="mt-4 text-3xl font-bold leading-tight text-[#2a2d31] sm:text-4xl">Прозрачные цены</h3>
+              <p className="mt-3 text-lg leading-relaxed text-[#6b6f74] sm:text-xl">
+                Реальные рыночные цены от фермеров и оптовиков
+              </p>
+            </article>
+
+            <article className="rounded-[22px] bg-[#f8f8f8] p-6 shadow-[0_10px_24px_rgba(16,24,18,0.1)]">
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#f1e7de] text-4xl text-[#e5a04f]">
+                ↗
+              </div>
+              <h3 className="mt-4 text-3xl font-bold leading-tight text-[#2a2d31] sm:text-4xl">Снижение потерь</h3>
+              <p className="mt-3 text-lg leading-relaxed text-[#6b6f74] sm:text-xl">
+                Быстрая продажа урожая, меньше порчи
+              </p>
+            </article>
+
+            <article className="rounded-[22px] bg-[#f8f8f8] p-6 shadow-[0_10px_24px_rgba(16,24,18,0.1)] md:col-span-2 lg:col-span-1">
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#f2ead8] text-4xl text-[#dcb14f]">
+                ⌗
+              </div>
+              <h3 className="mt-4 text-3xl font-bold leading-tight text-[#2a2d31] sm:text-4xl">Прослеживаемость</h3>
+              <p className="mt-3 text-lg leading-relaxed text-[#6b6f74] sm:text-xl">
+                QR-код на каждой партии от поля до прилавка
+              </p>
             </article>
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <article className="glass-panel p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--brand)]">Процессы</p>
-          <h3 className="mt-2 text-xl font-extrabold text-[var(--text)]">Управление задачами и урожаем</h3>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Планируйте работы по полям, фиксируйте партии и держите всю операционку в одном месте без таблиц.
-          </p>
-        </article>
-        <article className="glass-panel p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--brand)]">Продажи</p>
-          <h3 className="mt-2 text-xl font-extrabold text-[var(--text)]">Заказы и покупатели</h3>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Принимайте заказы, отслеживайте статусы и работайте с клиентами через единый поток уведомлений.
-          </p>
-        </article>
-        <article className="glass-panel p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--brand)]">Прозрачность</p>
-          <h3 className="mt-2 text-xl font-extrabold text-[var(--text)]">Трассировка партий по QR</h3>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Каждая партия доступна по QR-коду с ключевыми данными: источник, дата поступления и логистика.
-          </p>
-        </article>
-      </section>
-
-      <section className="glass-panel p-5 sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--brand)]">
-              Готовы начать
-            </p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-[var(--text)]">
-              Запустите цифровой контур вашей фермы
-            </h2>
-            <p className="mt-2 text-sm text-[var(--muted)]">
-              Регистрация занимает меньше минуты, после входа откроется каталог и рабочие разделы.
-            </p>
+      <section id="how-it-works" className="bg-[#efefef] pb-16 pt-8 sm:pb-20">
+        <div className="mx-auto w-full max-w-[1200px] px-4 pt-12 sm:px-8 sm:pt-14">
+          <div className="text-center">
+            <h2 className="text-4xl font-black tracking-tight text-[#2a2d31] sm:text-5xl">Как работает платформа</h2>
+            <div className="mx-auto mt-4 h-1.5 w-32 rounded-full bg-[#e7a65a]" />
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link to={isAuthenticated ? "/" : "/auth"} className="btn-primary">
-              {isAuthenticated ? "Перейти в каталог" : "Регистрация / Вход"}
-            </Link>
-            <Link to="/auth" className="btn-secondary">
-              Открыть авторизацию
-            </Link>
+
+          <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
+            {workflowSteps.map((step, index) => (
+              <article key={step.id} className="relative text-center">
+                {index < workflowSteps.length - 1 && (
+                  <div className="absolute right-[-20px] top-10 hidden h-[2px] w-10 bg-[#ddb457] xl:block" />
+                )}
+
+                <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-[rgba(29,108,54,0.08)]">
+                  <div className="grid h-20 w-20 place-items-center rounded-full border-[5px] border-[#1f6f38] text-4xl text-[#1f6f38]">
+                    {step.icon}
+                  </div>
+                </div>
+
+                <p className="mt-4 text-5xl font-semibold text-[#ddb457]">{step.id}</p>
+                <h3 className="mt-2 text-2xl font-bold leading-tight text-[#2a2d31]">{step.title}</h3>
+                <p className="mt-3 text-lg leading-relaxed text-[#6b6f74]">{step.description}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -1855,8 +2028,8 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen p-3 sm:p-4">
-      <div className="mx-auto flex w-full max-w-[1700px] gap-4">
+    <div className={isAuthenticated ? "min-h-screen p-3 sm:p-4" : "min-h-screen"}>
+      <div className={isAuthenticated ? "mx-auto flex w-full max-w-[1700px] gap-4" : "flex w-full"}>
         {isAuthenticated && !isGovernmentUser && (
           <AppSidebar currentUser={currentUser} cartCount={cartCount} logout={logout} />
         )}

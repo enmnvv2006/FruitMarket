@@ -22,21 +22,53 @@ function buildHeaders(headers = {}) {
   return result;
 }
 
-async function parseResponse(response) {
+async function parseResponse(response, endpoint) {
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
   let payload = null;
+  let textPayload = "";
 
   try {
-    payload = await response.json();
+    if (isJson) {
+      payload = await response.json();
+    } else {
+      textPayload = (await response.text()).trim();
+    }
   } catch {
     payload = null;
+    textPayload = "";
   }
 
   if (!response.ok) {
-    const message = payload?.message || "Request failed";
+    if (response.status === 404 && endpoint === "/login/gov") {
+      throw new Error(
+        "Вход для гос-пользователя недоступен: backend не содержит маршрут /login/gov. Обновите сервер на Render."
+      );
+    }
+
+    const fallbackStatus = `HTTP ${response.status}`;
+    const message =
+      payload?.message ||
+      (textPayload ? textPayload.replace(/\s+/g, " ").slice(0, 180) : "") ||
+      fallbackStatus;
     throw new Error(message);
   }
 
   return payload;
+}
+
+async function requestJson(endpoint, options = {}) {
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, options);
+    return await parseResponse(response, endpoint);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Сервер авторизации недоступен. Проверьте интернет или URL backend (VITE_AUTH_API_BASE_URL)."
+      );
+    }
+    throw error;
+  }
 }
 
 function setAccessToken(token) {
@@ -44,85 +76,73 @@ function setAccessToken(token) {
 }
 
 export async function registerBuyer(body) {
-  const response = await fetch(`${API_BASE}/register`, {
+  const payload = await requestJson("/register", {
     method: "POST",
     credentials: "include",
     headers: buildHeaders(),
     body: JSON.stringify(body),
   });
-
-  const payload = await parseResponse(response);
   setAccessToken(payload.accessToken);
   return payload;
 }
 
 export async function loginBuyer(body) {
-  const response = await fetch(`${API_BASE}/login/buyer`, {
+  const payload = await requestJson("/login/buyer", {
     method: "POST",
     credentials: "include",
     headers: buildHeaders(),
     body: JSON.stringify(body),
   });
-
-  const payload = await parseResponse(response);
   setAccessToken(payload.accessToken);
   return payload;
 }
 
 export async function loginSeller(body) {
-  const response = await fetch(`${API_BASE}/login/seller`, {
+  const payload = await requestJson("/login/seller", {
     method: "POST",
     credentials: "include",
     headers: buildHeaders(),
     body: JSON.stringify(body),
   });
-
-  const payload = await parseResponse(response);
   setAccessToken(payload.accessToken);
   return payload;
 }
 
 export async function loginAdmin(body) {
-  const response = await fetch(`${API_BASE}/login/admin`, {
+  const payload = await requestJson("/login/admin", {
     method: "POST",
     credentials: "include",
     headers: buildHeaders(),
     body: JSON.stringify(body),
   });
-
-  const payload = await parseResponse(response);
   setAccessToken(payload.accessToken);
   return payload;
 }
 
 export async function loginGov(body) {
-  const response = await fetch(`${API_BASE}/login/gov`, {
+  const payload = await requestJson("/login/gov", {
     method: "POST",
     credentials: "include",
     headers: buildHeaders(),
     body: JSON.stringify(body),
   });
-
-  const payload = await parseResponse(response);
   setAccessToken(payload.accessToken);
   return payload;
 }
 
 export async function refreshSession() {
-  const response = await fetch(`${API_BASE}/refresh`, {
+  const payload = await requestJson("/refresh", {
     method: "POST",
     credentials: "include",
     headers: buildHeaders(),
   });
-
-  const payload = await parseResponse(response);
   setAccessToken(payload.accessToken);
   return payload;
 }
 
 export async function logoutSession() {
   try {
-    await fetch(`${API_BASE}/logout`, {
+    await requestJson("/logout", {
       method: "POST",
       credentials: "include",
       headers: buildHeaders(),
@@ -133,34 +153,28 @@ export async function logoutSession() {
 }
 
 export async function getMe() {
-  const response = await fetch(`${API_BASE}/me`, {
+  return requestJson("/me", {
     method: "GET",
     credentials: "include",
     headers: buildHeaders(),
   });
-
-  return parseResponse(response);
 }
 
 export async function getAdminAccounts() {
-  const response = await fetch(`${API_BASE}/admin/accounts`, {
+  return requestJson("/admin/accounts", {
     method: "GET",
     credentials: "include",
     headers: buildHeaders(),
   });
-
-  return parseResponse(response);
 }
 
 export async function setAccountBlocked({ targetRole, targetId, blocked }) {
-  const response = await fetch(`${API_BASE}/admin/accounts/block`, {
+  return requestJson("/admin/accounts/block", {
     method: "POST",
     credentials: "include",
     headers: buildHeaders(),
     body: JSON.stringify({ targetRole, targetId, blocked }),
   });
-
-  return parseResponse(response);
 }
 
 export function clearAccessToken() {
