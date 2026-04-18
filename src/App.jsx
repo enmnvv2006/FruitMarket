@@ -486,6 +486,7 @@ function AppTopBar({
 
 function DashboardHeader({ products }) {
   const { currentUser } = useCart();
+  const navigate = useNavigate();
 
   if (!currentUser) {
     return null;
@@ -507,6 +508,53 @@ function DashboardHeader({ products }) {
         ? "Продавец"
         : "Покупатель";
 
+  const headerActions =
+    currentUser.role === "admin"
+      ? []
+      : currentUser.role === "seller"
+      ? [
+          {
+            key: "seller-qr",
+            label: "Мои QR-коды",
+            className: "btn-secondary border-[rgba(63,143,58,0.6)] text-[var(--brand)]",
+            onClick: () => navigate("/tracking"),
+          },
+          {
+            key: "seller-find-buyer",
+            label: "Найти покупателя",
+            className:
+              "rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[#322100] transition hover:brightness-95",
+            onClick: () => navigate("/"),
+          },
+          {
+            key: "seller-add",
+            label: "Добавить урожай",
+            className: "btn-primary",
+            onClick: () => navigate(`/seller/${currentUser.sellerId}`),
+          },
+        ]
+      : [
+          {
+            key: "buyer-cart",
+            label: "Моя корзина",
+            className: "btn-secondary border-[rgba(63,143,58,0.6)] text-[var(--brand)]",
+            onClick: () => navigate("/cart"),
+          },
+          {
+            key: "buyer-find",
+            label: "Найти товар",
+            className:
+              "rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[#322100] transition hover:brightness-95",
+            onClick: () => navigate("/"),
+          },
+          {
+            key: "buyer-deals",
+            label: "Мои сделки",
+            className: "btn-primary",
+            onClick: () => navigate("/account"),
+          },
+        ];
+
   return (
     <section className="space-y-4">
       <div className="glass-panel p-5 sm:p-6">
@@ -519,17 +567,20 @@ function DashboardHeader({ products }) {
             <p className="mt-2 text-sm text-[var(--muted)]">{roleLabel}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <button type="button" className="btn-secondary border-[rgba(63,143,58,0.6)] text-[var(--brand)]">
-              Мои QR-коды
-            </button>
-            <button type="button" className="rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[#322100] transition hover:brightness-95">
-              Найти покупателя
-            </button>
-            <button type="button" className="btn-primary">
-              Добавить урожай
-            </button>
-          </div>
+          {headerActions.length > 0 && (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {headerActions.map((action) => (
+                <button
+                  key={action.key}
+                  type="button"
+                  className={action.className}
+                  onClick={action.onClick}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -567,7 +618,6 @@ function HomePage({
       <section className="glass-panel p-4 sm:p-5">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="ui-chip">Фильтры каталога</span>
-          <span className="accent-badge">Подбор за 1 клик</span>
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_240px]">
           <div>
