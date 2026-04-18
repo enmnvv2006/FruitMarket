@@ -18,6 +18,16 @@ const DB_EXAMPLE_PATH =
   process.env.AUTH_DB_EXAMPLE_PATH || path.join(__dirname, "data", "auth-db.example.json");
 const FALLBACK_DB_PATH = "/tmp/auth-db.json";
 let activeDbPath = DB_PATH;
+const EMPTY_DB_TEMPLATE = `${JSON.stringify(
+  {
+    buyers: [],
+    refreshTokens: [],
+    blockedBuyerIds: [],
+    blockedSellerIds: [],
+  },
+  null,
+  2
+)}\n`;
 
 const app = express();
 const PORT = Number(process.env.PORT || process.env.AUTH_SERVER_PORT || 4000);
@@ -116,12 +126,23 @@ async function readDb() {
   try {
     await fs.access(activeDbPath);
   } catch {
-    const fallback = await fs.readFile(DB_EXAMPLE_PATH, "utf8");
+    let fallback = EMPTY_DB_TEMPLATE;
+    try {
+      fallback = await fs.readFile(DB_EXAMPLE_PATH, "utf8");
+    } catch {
+      fallback = EMPTY_DB_TEMPLATE;
+    }
     await fs.writeFile(activeDbPath, fallback, "utf8");
   }
 
-  const raw = await fs.readFile(activeDbPath, "utf8");
-  const parsed = JSON.parse(raw);
+  let parsed = null;
+  try {
+    const raw = await fs.readFile(activeDbPath, "utf8");
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = JSON.parse(EMPTY_DB_TEMPLATE);
+    await fs.writeFile(activeDbPath, EMPTY_DB_TEMPLATE, "utf8");
+  }
 
   return {
     buyers: Array.isArray(parsed.buyers) ? parsed.buyers : [],
