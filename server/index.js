@@ -371,7 +371,10 @@ app.post("/api/auth/register", async (req, res) => {
     const payload = await issueAuth(res, buyer);
     res.status(201).json(payload);
   } catch (error) {
-    res.status(500).json({ message: "Не удалось зарегистрировать пользователя." });
+    res.status(500).json({
+      message: "Не удалось зарегистрировать пользователя.",
+      detail: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
