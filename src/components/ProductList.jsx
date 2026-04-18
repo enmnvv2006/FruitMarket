@@ -51,11 +51,17 @@ export default function ProductList({
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-3xl font-extrabold leading-none text-[var(--text)]">{product.name}</h3>
+                  <h3 className="text-3xl font-extrabold leading-none text-[var(--text)]">
+                    {product.name}
+                  </h3>
                   <p className="mt-1 text-base text-[var(--muted)]">
-                    Сорт: {CATEGORY_LABELS[product.category] ?? CATEGORY_LABELS.fruits}
+                    Сорт:{" "}
+                    {CATEGORY_LABELS[product.category] ??
+                      CATEGORY_LABELS.fruits}
                   </p>
-                  <p className="text-sm text-[var(--muted)]">№ {product.batchId}</p>
+                  <p className="text-sm text-[var(--muted)]">
+                    № {product.batchId}
+                  </p>
                 </div>
                 <span
                   className={`rounded-full px-3 py-1 text-sm font-semibold ${
@@ -84,10 +90,16 @@ export default function ProductList({
 
               <div className="space-y-1 text-base text-[var(--muted)]">
                 <p>
-                  Дата сбора: <span className="font-semibold text-[var(--text)]">{product.receivedAt}</span>
+                  Дата сбора:{" "}
+                  <span className="font-semibold text-[var(--text)]">
+                    {product.receivedAt}
+                  </span>
                 </p>
                 <p>
-                  Локация: <span className="font-semibold text-[var(--text)]">{product.source || "Поле №5, Костанай"}</span>
+                  Локация:{" "}
+                  <span className="font-semibold text-[var(--text)]">
+                    {product.source || "Поле №5, Костанай"}
+                  </span>
                 </p>
                 {!isSellerView && seller && (
                   <Link
@@ -101,19 +113,31 @@ export default function ProductList({
 
               {isSellerView ? (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Link to={`/product/${product.id}`} className="btn-secondary text-center">
+                  <Link
+                    to={`/product/${product.id}`}
+                    className="btn-secondary text-center"
+                  >
                     QR-код
                   </Link>
-                  <button onClick={() => onEditProduct?.(product)} className="btn-primary">
+                  <button
+                    onClick={() => onEditProduct?.(product)}
+                    className="btn-primary"
+                  >
                     Найти покупателя
                   </button>
-                  <button onClick={() => onDeleteProduct?.(product.id)} className="btn-danger">
+                  <button
+                    onClick={() => onDeleteProduct?.(product.id)}
+                    className="btn-danger"
+                  >
                     Удалить
                   </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Link to={`/product/${product.id}`} className="btn-secondary text-center">
+                  <Link
+                    to={`/product/${product.id}`}
+                    className="btn-secondary text-center"
+                  >
                     QR-код
                   </Link>
                   <button
@@ -123,13 +147,18 @@ export default function ProductList({
                   >
                     {outOfStock ? "Нет в наличии" : "Найти покупателя"}
                   </button>
-                  <Link to={`/product/${product.id}`} className="btn-secondary text-center">
+                  <Link
+                    to={`/product/${product.id}`}
+                    className="btn-secondary text-center"
+                  >
                     Подробнее
                   </Link>
                 </div>
               )}
 
-              <p className="text-sm leading-6 text-[var(--muted)]">{product.description}</p>
+              <p className="text-sm leading-6 text-[var(--muted)]">
+                {product.description}
+              </p>
             </div>
           </article>
         );

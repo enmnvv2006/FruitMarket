@@ -7,9 +7,10 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigate,
   useParams,
 } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ProductList from "./components/ProductList";
@@ -1089,7 +1090,9 @@ function AnalyticsPage({ currentUser, products }) {
   );
 }
 
-function GovernmentDashboardPage({ currentUser }) {
+function GovernmentDashboardPage({ currentUser, onLogout }) {
+  const navigate = useNavigate();
+  const mapSectionRef = useRef(null);
   const statCards = [
     { title: "Объём производства", value: "1,155", suffix: "тыс. тонн", trend: "↑ 22.8% за месяц" },
     { title: "Активных фермеров", value: "8,630", suffix: "", trend: "↑ 12.4% за месяц" },
@@ -1101,6 +1104,146 @@ function GovernmentDashboardPage({ currentUser }) {
   const wheat = [42, 41, 44, 44, 46, 47];
   const apples = [85, 84, 90, 89, 94, 95];
   const potato = [35, 34, 37, 36, 39, 40];
+  const mapImageUrl = `${import.meta.env.BASE_URL}kyrgyzstan-adm-location-map.svg`;
+  const regionMap = [
+    {
+      id: "talas",
+      name: "Таласская область",
+      hotspot:
+        "240,260 360,220 430,290 380,360 260,360 210,300",
+      label: { x: 320, y: 300 },
+      productionKtons: 102,
+      farmers: 614,
+      deals: 186,
+      topCulture: "Фасоль",
+    },
+    {
+      id: "chui",
+      name: "Чуйская область",
+      hotspot:
+        "430,250 690,180 860,220 900,300 760,350 560,340 430,300",
+      label: { x: 650, y: 285 },
+      productionKtons: 224,
+      farmers: 1308,
+      deals: 471,
+      topCulture: "Пшеница",
+    },
+    {
+      id: "issyk-kul",
+      name: "Иссык-Кульская область",
+      hotspot:
+        "900,240 1180,210 1400,260 1460,320 1360,380 1100,370 950,340",
+      label: { x: 1145, y: 305 },
+      productionKtons: 141,
+      farmers: 922,
+      deals: 305,
+      topCulture: "Яблоки",
+    },
+    {
+      id: "jalal-abad",
+      name: "Джалал-Абадская область",
+      hotspot:
+        "380,400 560,340 760,350 840,430 760,540 560,530 420,500 350,450",
+      label: { x: 610, y: 445 },
+      productionKtons: 186,
+      farmers: 1420,
+      deals: 523,
+      topCulture: "Орехи",
+    },
+    {
+      id: "naryn",
+      name: "Нарынская область",
+      hotspot:
+        "760,350 960,340 1180,390 1180,520 980,540 840,510 780,430",
+      label: { x: 970, y: 450 },
+      productionKtons: 133,
+      farmers: 844,
+      deals: 277,
+      topCulture: "Картофель",
+    },
+    {
+      id: "osh",
+      name: "Ошская область",
+      hotspot:
+        "760,540 980,540 1180,520 1320,560 1250,650 980,640 860,620",
+      label: { x: 1025, y: 590 },
+      productionKtons: 208,
+      farmers: 1678,
+      deals: 618,
+      topCulture: "Хлопок",
+    },
+    {
+      id: "batken",
+      name: "Баткенская область",
+      hotspot:
+        "330,530 560,530 760,540 860,620 700,680 530,700 360,650",
+      label: { x: 565, y: 620 },
+      productionKtons: 161,
+      farmers: 1189,
+      deals: 404,
+      topCulture: "Абрикос",
+    },
+  ];
+  const [selectedRegionId, setSelectedRegionId] = useState("chui");
+  const selectedRegion =
+    regionMap.find((region) => region.id === selectedRegionId) || regionMap[0];
+  const maxRegionVolume = Math.max(...regionMap.map((item) => item.productionKtons));
+
+  const handleOpenRegionDetails = () => {
+    mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleExportReport = () => {
+    const headers = [
+      "region",
+      "production_ktons",
+      "farmers",
+      "deals",
+      "top_culture",
+    ];
+    const rows = regionMap.map((region) => [
+      region.name,
+      region.productionKtons,
+      region.farmers,
+      region.deals,
+      region.topCulture,
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const date = new Date().toISOString().slice(0, 10);
+
+    link.href = url;
+    link.download = `gov-region-report-${date}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleQrTraceability = () => {
+    const basePath = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
+    const targetPath = `${basePath}/gov?region=${selectedRegion.id}`.replace(/\/{2,}/g, "/");
+    const targetUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${targetPath}`
+        : targetPath;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
+      targetUrl
+    )}`;
+
+    window.open(qrUrl, "_blank", "noopener,noreferrer");
+    navigate(`/gov?region=${selectedRegion.id}`);
+  };
 
   return (
     <div className="space-y-5">
@@ -1121,9 +1264,18 @@ function GovernmentDashboardPage({ currentUser }) {
             <button type="button" className="rounded-xl px-3 py-2 text-sm font-semibold text-[var(--muted)]">Прослеживаемость</button>
           </div>
 
-          <div className="text-right">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+            >
+              Выход
+            </button>
+            <div className="text-right">
             <p className="text-base font-bold text-[var(--text)]">{currentUser?.name || "Гос-пользователь"}</p>
             <p className="text-sm text-[var(--muted)]">{currentUser?.title || "Главный аналитик"}</p>
+            </div>
           </div>
         </div>
       </section>
@@ -1145,21 +1297,82 @@ function GovernmentDashboardPage({ currentUser }) {
         ))}
       </section>
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+      <section ref={mapSectionRef} className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_0.65fr]">
         <article className="glass-panel motion-card motion-delay-4 p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-2xl font-extrabold text-[var(--text)]">Карта производства по регионам</h2>
             <p className="text-sm font-semibold text-[var(--muted)]">Кликните на область для детализации</p>
           </div>
           <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-3">
-            <svg viewBox="0 0 640 320" className="h-[340px] w-full">
-              <rect x="0" y="0" width="640" height="320" fill="#f5f8f1" />
-              <path d="M85 160 L190 135 L235 188 L180 235 L104 220 Z" fill="#79bf7d" />
-              <path d="M192 135 L334 108 L381 160 L320 214 L235 188 Z" fill="#2f8538" />
-              <path d="M145 224 L239 238 L239 310 L130 300 L98 260 Z" fill="#4ba64f" />
-              <path d="M239 238 L356 252 L356 316 L239 310 Z" fill="#1f6e2e" />
-              <path d="M356 252 L504 220 L546 280 L472 318 L356 296 Z" fill="#7cc282" />
+            <svg
+              viewBox="0 0 1644 829"
+              className="h-[360px] w-full rounded-xl border border-[var(--line)] bg-[#eef3ea]"
+            >
+              <image
+                href={mapImageUrl}
+                x="0"
+                y="0"
+                width="1644"
+                height="829"
+                preserveAspectRatio="xMidYMid meet"
+                style={{ pointerEvents: "none" }}
+              />
+              {regionMap.map((region) => {
+                const isActive = region.id === selectedRegion.id;
+                return (
+                  <g
+                    key={region.id}
+                    onClick={() => setSelectedRegionId(region.id)}
+                    className="cursor-pointer"
+                  >
+                    <polygon
+                      points={region.hotspot}
+                      fill={isActive ? "rgba(31,110,46,0.38)" : "rgba(47,132,56,0.12)"}
+                      stroke={isActive ? "#174224" : "rgba(23,66,36,0.35)"}
+                      strokeWidth={isActive ? 4 : 2}
+                      className="transition-all duration-200"
+                    />
+                    <text
+                      x={region.label.x}
+                      y={region.label.y}
+                      textAnchor="middle"
+                      fontSize="32"
+                      fontWeight="800"
+                      fill={isActive ? "#10331c" : "#1f3e2a"}
+                      className="pointer-events-none select-none"
+                    >
+                      {region.name.replace("ская область", "")}
+                    </text>
+                  </g>
+                );
+              })}
             </svg>
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-3 sm:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Выбранный регион</p>
+              <h3 className="mt-1 text-xl font-extrabold text-[var(--text)]">{selectedRegion.name}</h3>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <p className="rounded-xl border border-[var(--line)] bg-white px-3 py-2">Производство: <strong>{selectedRegion.productionKtons} тыс. тонн</strong></p>
+                <p className="rounded-xl border border-[var(--line)] bg-white px-3 py-2">Фермеров: <strong>{selectedRegion.farmers}</strong></p>
+                <p className="rounded-xl border border-[var(--line)] bg-white px-3 py-2">Сделок: <strong>{selectedRegion.deals}</strong></p>
+                <p className="rounded-xl border border-[var(--line)] bg-white px-3 py-2">Лидер: <strong>{selectedRegion.topCulture}</strong></p>
+              </div>
+            </div>
+            <div className="flex flex-col justify-center">
+              <p className="text-sm font-semibold text-[var(--muted)]">Доля от максимального объёма</p>
+              <div className="mt-2 h-4 overflow-hidden rounded-full bg-[rgba(96,114,85,0.18)]">
+                <div
+                  className="h-full rounded-full bg-[var(--brand)] transition-all duration-500"
+                  style={{
+                    width: `${Math.round((selectedRegion.productionKtons / maxRegionVolume) * 100)}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-2 text-sm font-semibold text-[var(--brand)]">
+                {Math.round((selectedRegion.productionKtons / maxRegionVolume) * 100)}% от лидирующего региона
+              </p>
+            </div>
           </div>
         </article>
 
@@ -1188,6 +1401,64 @@ function GovernmentDashboardPage({ currentUser }) {
             <span className="text-[#63b76b]">● Картофель</span>
           </div>
         </article>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <button
+          type="button"
+          onClick={handleOpenRegionDetails}
+          className="glass-panel p-5 text-left transition hover:shadow-[0_14px_30px_rgba(18,52,28,0.15)] sm:p-6"
+        >
+          <div className="flex items-start gap-4">
+            <div className="grid h-20 w-20 place-items-center rounded-3xl bg-[rgba(47,132,56,0.12)]">
+              <svg viewBox="0 0 24 24" className="h-10 w-10 text-[var(--brand)]" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20V6.5Z" />
+                <path d="M9 4v13.5M15 6.5V20" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-4xl font-extrabold leading-tight text-[var(--text)] sm:text-3xl">Детализация по регионам</h3>
+              <p className="mt-2 text-xl text-[var(--muted)] sm:text-lg">Подробная статистика и таблицы</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleExportReport}
+          className="glass-panel p-5 text-left transition hover:shadow-[0_14px_30px_rgba(18,52,28,0.15)] sm:p-6"
+        >
+          <div className="flex items-start gap-4">
+            <div className="grid h-20 w-20 place-items-center rounded-3xl bg-[rgba(245,168,37,0.12)]">
+              <svg viewBox="0 0 24 24" className="h-10 w-10 text-[#ea9647]" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M7 3h7l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+                <path d="M14 3v5h5M9 12h6M9 16h6" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-4xl font-extrabold leading-tight text-[var(--text)] sm:text-3xl">Сформировать отчёт</h3>
+              <p className="mt-2 text-xl text-[var(--muted)] sm:text-lg">Экспорт в CSV, Excel, PDF</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleQrTraceability}
+          className="glass-panel p-5 text-left transition hover:shadow-[0_14px_30px_rgba(18,52,28,0.15)] sm:p-6"
+        >
+          <div className="flex items-start gap-4">
+            <div className="grid h-20 w-20 place-items-center rounded-3xl bg-[rgba(47,132,56,0.12)]">
+              <svg viewBox="0 0 24 24" className="h-10 w-10 text-[var(--brand)]" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4zM10 6h4M6 10v4M18 10v4M10 18h4" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-4xl font-extrabold leading-tight text-[var(--text)] sm:text-3xl">Прослеживаемость по QR</h3>
+              <p className="mt-2 text-xl text-[var(--muted)] sm:text-lg">Полная цепочка поставок</p>
+            </div>
+          </div>
+        </button>
       </section>
     </div>
   );
@@ -1635,7 +1906,11 @@ function AppContent() {
             path="/gov"
             element={
               <RequireAuth>
-                {isGovernmentUser ? <GovernmentDashboardPage currentUser={currentUser} /> : <Navigate to="/" replace />}
+                {isGovernmentUser ? (
+                  <GovernmentDashboardPage currentUser={currentUser} onLogout={logout} />
+                ) : (
+                  <Navigate to="/" replace />
+                )}
               </RequireAuth>
             }
           />
