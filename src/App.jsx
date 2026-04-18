@@ -1498,18 +1498,18 @@ function LandingPage({ products, isAuthenticated }) {
   ];
 
   return (
-    <div className="pt-[86px]">
+    <div className="pt-[82px]">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[rgba(18,52,28,0.08)] bg-white shadow-[0_6px_18px_rgba(16,24,18,0.08)]">
-        <div className="mx-auto flex h-[78px] w-full max-w-[1200px] items-center justify-between px-4 sm:h-[86px] sm:px-8">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1320px] items-center justify-between px-4 sm:h-[82px] sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#196b33] text-2xl font-black text-white sm:h-12 sm:w-12 sm:text-3xl">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#196b33] text-xl font-black text-white sm:h-11 sm:w-11 sm:text-2xl">
               A
             </div>
-            <span className="text-3xl font-extrabold tracking-tight text-[#2a2d31] sm:text-4xl">Aykyn Charba</span>
+            <span className="text-2xl font-extrabold tracking-tight text-[#2a2d31] sm:text-3xl">Aykyn Charba</span>
           </div>
           <Link
             to="/auth"
-            className="rounded-full border-[3px] border-[#196b33] px-5 py-2 text-xl font-bold text-[#196b33] transition hover:bg-[rgba(25,107,51,0.08)] sm:px-6 sm:text-2xl"
+            className="rounded-full border-[3px] border-[#196b33] px-5 py-1.5 text-lg font-bold text-[#196b33] transition hover:bg-[rgba(25,107,51,0.08)] sm:px-6 sm:text-xl"
           >
             Войти
           </Link>
@@ -1517,102 +1517,102 @@ function LandingPage({ products, isAuthenticated }) {
       </header>
 
       <section className="bg-[#e9eee6] pb-8 pt-5 sm:pb-10 sm:pt-6">
-        <div className="mx-auto w-full max-w-[1700px] px-4 sm:px-5">
-          <div className="overflow-hidden rounded-[42px] bg-[linear-gradient(104deg,#124d2a_0%,#135a30_38%,#2f7b39_100%)] p-7 sm:p-9 lg:p-10">
-            <div className="grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:gap-9">
-              <div className="max-w-[760px]">
+        <div className="mx-auto w-full max-w-[1320px] px-4 sm:px-6">
+          <div className="overflow-hidden rounded-[34px] bg-[linear-gradient(104deg,#124d2a_0%,#135a30_38%,#2f7b39_100%)] p-6 shadow-[0_18px_38px_rgba(19,61,33,0.2)] sm:p-8 lg:p-9">
+            <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:gap-8">
+              <div className="max-w-[690px]">
                 <p className="text-sm font-bold uppercase tracking-[0.24em] text-[rgba(223,242,226,0.88)] lg:text-base">
                   Farm Ops Platform
                 </p>
-                <h1 className="mt-4 text-4xl font-black leading-[1.04] text-white sm:text-5xl lg:text-[76px]">
+                <h1 className="mt-3 text-4xl font-black leading-[1.06] text-white sm:text-5xl lg:text-[64px]">
                   Управляйте фермой
                   <br />
                   в одном рабочем месте
                 </h1>
-                <p className="mt-5 max-w-[900px] text-lg font-medium leading-relaxed text-[rgba(234,247,237,0.88)] sm:text-[33px] lg:text-[44px]">
+                <p className="mt-4 max-w-[660px] text-base font-medium leading-relaxed text-[rgba(234,247,237,0.88)] sm:text-lg lg:text-[38px]">
                   Учет партий, поставок, заказов и продаж в едином интерфейсе для команды, продавцов и покупателей.
                 </p>
 
-                <div className="mt-8 flex flex-wrap gap-3 sm:mt-9">
+                <div className="mt-7 flex flex-wrap gap-3 sm:mt-8">
                   <Link
                     to="/auth"
-                    className="rounded-[20px] bg-[#f2b44a] px-8 py-3 text-lg font-bold text-[#2e2b1f] transition hover:brightness-105 sm:px-10 sm:text-xl"
+                    className="rounded-[18px] bg-[#f2b44a] px-7 py-2.5 text-base font-bold text-[#2e2b1f] transition hover:brightness-105 sm:px-8 sm:text-lg"
                   >
                     Начать работу
                   </Link>
                   <Link
                     to="/auth"
-                    className="rounded-[20px] border-2 border-[rgba(216,235,221,0.42)] bg-[rgba(20,67,35,0.36)] px-8 py-3 text-lg font-bold text-[rgba(239,248,242,0.95)] transition hover:bg-[rgba(21,76,38,0.5)] sm:px-10 sm:text-xl"
+                    className="rounded-[18px] border-2 border-[rgba(216,235,221,0.42)] bg-[rgba(20,67,35,0.36)] px-7 py-2.5 text-base font-bold text-[rgba(239,248,242,0.95)] transition hover:bg-[rgba(21,76,38,0.5)] sm:px-8 sm:text-lg"
                   >
                     Войти в аккаунт
                   </Link>
                 </div>
               </div>
 
-              <div className="grid gap-4 self-end">
-                <article className="rounded-[30px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-6 sm:py-5">
+              <div className="grid gap-3.5 self-end">
+                <article className="rounded-[24px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-5 sm:py-4.5">
                   <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(220,238,225,0.9)] sm:text-sm">Партии</p>
-                  <p className="mt-2 text-4xl font-black text-white sm:text-5xl">46</p>
-                  <p className="text-lg text-[rgba(234,248,239,0.9)] sm:text-2xl">В активном каталоге</p>
+                  <p className="mt-1.5 text-4xl font-black text-white sm:text-[44px]">46</p>
+                  <p className="text-base text-[rgba(234,248,239,0.9)] sm:text-xl">В активном каталоге</p>
                 </article>
-                <article className="rounded-[30px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-6 sm:py-5">
+                <article className="rounded-[24px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-5 sm:py-4.5">
                   <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(220,238,225,0.9)] sm:text-sm">Объём</p>
-                  <p className="mt-2 text-4xl font-black text-white sm:text-5xl">858 кг</p>
-                  <p className="text-lg text-[rgba(234,248,239,0.9)] sm:text-2xl">Актуальные остатки</p>
+                  <p className="mt-1.5 text-4xl font-black text-white sm:text-[44px]">858 кг</p>
+                  <p className="text-base text-[rgba(234,248,239,0.9)] sm:text-xl">Актуальные остатки</p>
                 </article>
-                <article className="rounded-[30px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-6 sm:py-5">
+                <article className="rounded-[24px] border border-[rgba(220,237,225,0.3)] bg-[rgba(164,203,160,0.2)] px-5 py-4 sm:px-5 sm:py-4.5">
                   <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(220,238,225,0.9)] sm:text-sm">Средняя цена</p>
-                  <p className="mt-2 text-4xl font-black text-white sm:text-5xl">255 сом</p>
-                  <p className="text-lg text-[rgba(234,248,239,0.9)] sm:text-2xl">За килограмм</p>
+                  <p className="mt-1.5 text-4xl font-black text-white sm:text-[44px]">255 сом</p>
+                  <p className="text-base text-[rgba(234,248,239,0.9)] sm:text-xl">За килограмм</p>
                 </article>
               </div>
             </div>
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            <article className="rounded-[32px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
+            <article className="rounded-[24px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#4e944f] sm:text-base">Процессы</p>
-              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-4xl">Управление задачами и урожаем</h3>
-              <p className="mt-3 text-lg leading-relaxed text-[#5b6d5f] sm:text-2xl">
+              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-[34px]">Управление задачами и урожаем</h3>
+              <p className="mt-3 text-base leading-relaxed text-[#5b6d5f] sm:text-[18px]">
                 Планируйте работы по полям, фиксируйте партии и держите всю операционку в одном месте без таблиц.
               </p>
             </article>
-            <article className="rounded-[32px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
+            <article className="rounded-[24px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#4e944f] sm:text-base">Продажи</p>
-              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-4xl">Заказы и покупатели</h3>
-              <p className="mt-3 text-lg leading-relaxed text-[#5b6d5f] sm:text-2xl">
+              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-[34px]">Заказы и покупатели</h3>
+              <p className="mt-3 text-base leading-relaxed text-[#5b6d5f] sm:text-[18px]">
                 Принимайте заказы, отслеживайте статусы и работайте с клиентами через единый поток уведомлений.
               </p>
             </article>
-            <article className="rounded-[32px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
+            <article className="rounded-[24px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-5 sm:p-6">
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#4e944f] sm:text-base">Прозрачность</p>
-              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-4xl">Трассировка партий по QR</h3>
-              <p className="mt-3 text-lg leading-relaxed text-[#5b6d5f] sm:text-2xl">
+              <h3 className="mt-2 text-3xl font-black leading-tight text-[#213126] sm:text-[34px]">Трассировка партий по QR</h3>
+              <p className="mt-3 text-base leading-relaxed text-[#5b6d5f] sm:text-[18px]">
                 Каждая партия доступна по QR-коду с ключевыми данными: источник, дата поступления и логистика.
               </p>
             </article>
           </div>
 
-          <div className="mt-6 flex flex-col gap-4 rounded-[32px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
+          <div className="mt-6 flex flex-col gap-4 rounded-[24px] border border-[rgba(34,88,42,0.17)] bg-[#f5f7f2] p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#4e944f] sm:text-base">Готовы начать</p>
-              <h3 className="mt-2 text-4xl font-black leading-tight text-[#213126] sm:text-5xl">
+              <h3 className="mt-2 text-4xl font-black leading-tight text-[#213126] sm:text-[56px]">
                 Запустите цифровой контур вашей фермы
               </h3>
-              <p className="mt-2 text-lg leading-relaxed text-[#5b6d5f] sm:text-2xl">
+              <p className="mt-2 text-base leading-relaxed text-[#5b6d5f] sm:text-[18px]">
                 Регистрация занимает меньше минуты, после входа откроется каталог и рабочие разделы.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/auth"
-                className="rounded-full bg-[#2f943f] px-6 py-3 text-lg font-bold text-white transition hover:brightness-105 sm:px-9 sm:text-xl"
+                className="rounded-full bg-[#2f943f] px-6 py-2.5 text-base font-bold text-white transition hover:brightness-105 sm:px-8 sm:text-lg"
               >
                 Регистрация / Вход
               </Link>
               <Link
                 to="/auth"
-                className="rounded-full border-2 border-[rgba(43,132,55,0.24)] bg-white px-6 py-3 text-lg font-bold text-[#2a3b2f] transition hover:bg-[#f7faf7] sm:px-9 sm:text-xl"
+                className="rounded-full border-2 border-[rgba(43,132,55,0.24)] bg-white px-6 py-2.5 text-base font-bold text-[#2a3b2f] transition hover:bg-[#f7faf7] sm:px-8 sm:text-lg"
               >
                 Открыть авторизацию
               </Link>
