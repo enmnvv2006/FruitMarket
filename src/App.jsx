@@ -155,6 +155,17 @@ function NavGlyph({ kind }) {
     );
   }
 
+  if (kind === "tracking") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="3" width="5" height="5" rx="1" />
+        <rect x="16" y="3" width="5" height="5" rx="1" />
+        <rect x="3" y="16" width="5" height="5" rx="1" />
+        <path d="M11 3h3v3h-3zM11 11h3v3h-3zM16 11h5v5h-5zM8 8h3v3H8zM3 11h3v3H3zM11 16h3v5h-3z" />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M4 6h16M4 12h16M4 18h16" />
@@ -178,6 +189,7 @@ function AppSidebar({ currentUser, cartCount, logout }) {
             { to: "/", label: "Дашборд", kind: "dashboard" },
             { to: `/seller/${currentUser.sellerId}`, label: "Урожай", kind: "cart" },
             { to: "/account", label: "Сделки", kind: "account" },
+            { to: "/tracking", label: "Прослеживаемость", kind: "tracking" },
           ]
         : [
             { to: "/", label: "Дашборд", kind: "dashboard" },
@@ -304,6 +316,7 @@ function AppTopBar({
             { to: "/", label: "Дашборд" },
             { to: `/seller/${currentUser.sellerId}`, label: "Урожай" },
             { to: "/account", label: "Сделки" },
+            { to: "/tracking", label: "Прослеживаемость" },
           ]
         : [
             { to: "/", label: "Дашборд" },
@@ -600,6 +613,253 @@ function HomePage({
             : undefined
         }
       />
+    </div>
+  );
+}
+
+function TrackingPage({ currentUser, products }) {
+  const sellerProducts =
+    currentUser?.role === "seller"
+      ? products.filter((item) => item.sellerId === currentUser.sellerId)
+      : [];
+
+  const initialBatch = sellerProducts[0]?.batchId ?? "P-2301";
+  const [trackingInput, setTrackingInput] = useState(initialBatch);
+  const [trackingQuery, setTrackingQuery] = useState(initialBatch);
+
+  const normalizeTrackingText = (value) =>
+    String(value ?? "")
+      .toLowerCase()
+      .replace(/[п]/g, "p")
+      .replace(/[о]/g, "o")
+      .replace(/[с]/g, "c")
+      .replace(/[х]/g, "x")
+      .replace(/[а]/g, "a")
+      .replace(/[е]/g, "e")
+      .replace(/[к]/g, "k")
+      .replace(/[м]/g, "m")
+      .replace(/[т]/g, "t")
+      .replace(/[^a-z0-9]+/g, "");
+
+  const productIndexById = useMemo(
+    () => Object.fromEntries(sellerProducts.map((item, index) => [item.id, index])),
+    [sellerProducts]
+  );
+
+  const getPublicBatchCode = (item) => {
+    const index = productIndexById[item.id] ?? 0;
+    return `P-${2301 + index}`;
+  };
+
+  const selectedProduct = useMemo(() => {
+    if (!sellerProducts.length) {
+      return null;
+    }
+
+    const query = normalizeTrackingText(trackingQuery);
+    if (!query) {
+      return sellerProducts[0];
+    }
+
+    return sellerProducts.find((item) => {
+      const searchable = normalizeTrackingText(
+        `${item.batchId} ${item.id} ${item.name} ${item.source} ${item.destination} ${getPublicBatchCode(item)}`
+      );
+      return searchable.includes(query);
+    });
+  }, [sellerProducts, trackingQuery]);
+
+  const handleTrackingSearch = (event) => {
+    event.preventDefault();
+    setTrackingQuery(trackingInput);
+  };
+
+  if (!sellerProducts.length) {
+    return (
+      <section className="glass-panel p-8 text-center">
+        <h2 className="section-title">Прослеживаемость</h2>
+        <p className="muted mt-2">У вас пока нет партий для отслеживания.</p>
+      </section>
+    );
+  }
+
+  const activeProduct = selectedProduct ?? sellerProducts[0];
+  const scanCount = Math.max(3, Math.min(12, Math.round((activeProduct.quantity || 0) / 10)));
+  const movementHistory = [
+    {
+      id: "stage-1",
+      title: "Партия сформирована",
+      location: activeProduct.source || "Поле",
+      timestamp: `${activeProduct.receivedAt} 08:40`,
+      status: "completed",
+    },
+    {
+      id: "stage-2",
+      title: "Сканирование на сортировке",
+      location: "Сортировочный узел",
+      timestamp: `${activeProduct.receivedAt} 13:20`,
+      status: "completed",
+    },
+    {
+      id: "stage-3",
+      title: "Доставка на склад",
+      location: activeProduct.destination || "Склад",
+      timestamp: `${activeProduct.receivedAt} 17:45`,
+      status: "active",
+    },
+  ];
+
+  const productLink = `/product/${activeProduct.id}`;
+
+  return (
+    <div className="space-y-5">
+      <section>
+        <h1 className="text-4xl font-extrabold tracking-tight text-[var(--text)]">Прослеживаемость</h1>
+        <p className="mt-2 text-lg text-[var(--muted)]">История сканирований и перемещений партий</p>
+      </section>
+
+      <section className="glass-panel p-5 sm:p-6">
+        <h2 className="text-2xl font-extrabold text-[var(--text)]">Поиск по партии или QR-коду</h2>
+        <form onSubmit={handleTrackingSearch} className="mt-4 flex flex-col gap-3 lg:flex-row">
+          <label htmlFor="tracking-query" className="relative block flex-1">
+            <svg
+              viewBox="0 0 24 24"
+              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--muted)]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M4 4h4v4H4zm12 0h4v4h-4zM4 16h4v4H4zM11 4h3v3h-3zm0 7h3v3h-3zm5 0h4v4h-4zM8 8h3v3H8zM4 11h3v3H4zm7 5h3v4h-3z" />
+            </svg>
+            <input
+              id="tracking-query"
+              type="text"
+              value={trackingInput}
+              onChange={(event) => setTrackingInput(event.target.value)}
+              placeholder="Например: P-2301 или BATCH-1044"
+              className="input-base w-full pl-12"
+            />
+          </label>
+          <button type="submit" className="btn-primary min-w-[120px]">
+            Найти
+          </button>
+        </form>
+        {!selectedProduct && trackingQuery.trim() && (
+          <p className="mt-3 text-sm font-semibold text-[rgba(181,65,65,0.95)]">
+            Партия по запросу «{trackingQuery.trim()}» не найдена.
+          </p>
+        )}
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <article className="glass-panel p-5">
+          <div className="flex items-center gap-3">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[rgba(63,143,58,0.14)] text-[var(--brand)]">
+              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" />
+                <path d="m12 3 8 4.5-8 4.5L4 7.5z" />
+                <path d="M12 12v9" />
+              </svg>
+            </span>
+            <div>
+              <p className="text-xl text-[var(--muted)]">Партия</p>
+              <p className="text-5xl font-extrabold leading-none text-[var(--text)]">
+                {getPublicBatchCode(activeProduct)}
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article className="glass-panel p-5">
+          <div className="flex items-center gap-3">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[rgba(63,143,58,0.14)] text-[var(--brand)]">
+              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 4h4v4H4zm12 0h4v4h-4zM4 16h4v4H4zM11 4h3v3h-3zm0 7h3v3h-3zm5 0h4v4h-4zM8 8h3v3H8zM4 11h3v3H4zm7 5h3v4h-3z" />
+              </svg>
+            </span>
+            <div>
+              <p className="text-xl text-[var(--muted)]">Сканирований</p>
+              <p className="text-5xl font-extrabold leading-none text-[var(--text)]">{scanCount}</p>
+            </div>
+          </div>
+        </article>
+
+        <article className="glass-panel p-5">
+          <div className="flex items-center gap-3">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[rgba(240,176,74,0.16)] text-[rgba(210,134,12,1)]">
+              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 21s7-4.6 7-10a7 7 0 1 0-14 0c0 5.4 7 10 7 10z" />
+                <circle cx="12" cy="11" r="2.5" />
+              </svg>
+            </span>
+            <div>
+              <p className="text-xl text-[var(--muted)]">Текущая локация</p>
+              <p className="text-2xl font-extrabold leading-tight text-[var(--text)]">{activeProduct.destination}</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section className="glass-panel p-5 sm:p-6">
+        <h2 className="text-2xl font-extrabold text-[var(--text)]">Информация о партии</h2>
+        <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="space-y-4">
+            <p className="text-lg text-[var(--muted)]">
+              Культура
+              <br />
+              <span className="text-3xl font-extrabold leading-tight text-[var(--text)]">{activeProduct.name}</span>
+            </p>
+            <p className="text-lg text-[var(--muted)]">
+              Объём
+              <br />
+              <span className="text-3xl font-extrabold leading-tight text-[var(--text)]">{activeProduct.quantity} кг</span>
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-lg text-[var(--muted)]">
+              Дата уборки
+              <br />
+              <span className="text-3xl font-extrabold leading-tight text-[var(--text)]">{activeProduct.receivedAt}</span>
+            </p>
+            <p className="text-lg text-[var(--muted)]">
+              Место уборки
+              <br />
+              <span className="text-3xl font-extrabold leading-tight text-[var(--text)]">{activeProduct.source}</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="glass-panel p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl font-extrabold text-[var(--text)]">История перемещений</h2>
+          <Link to={productLink} className="btn-secondary">
+            Открыть карточку товара
+          </Link>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {movementHistory.map((entry) => (
+            <article
+              key={entry.id}
+              className={`rounded-2xl border px-4 py-3 ${
+                entry.status === "active"
+                  ? "border-[rgba(63,143,58,0.45)] bg-[rgba(63,143,58,0.08)]"
+                  : "border-[var(--line)] bg-[var(--surface)]"
+              }`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-base font-bold text-[var(--text)]">{entry.title}</p>
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                  {entry.timestamp}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-[var(--muted)]">{entry.location}</p>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -1050,6 +1310,18 @@ function AppContent() {
             element={
               <RequireAuth>
                 {currentUser?.role === "admin" ? <Navigate to="/admin" replace /> : <AccountPage />}
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/tracking"
+            element={
+              <RequireAuth>
+                {currentUser?.role === "seller" ? (
+                  <TrackingPage currentUser={currentUser} products={products} />
+                ) : (
+                  <Navigate to="/" replace />
+                )}
               </RequireAuth>
             }
           />
