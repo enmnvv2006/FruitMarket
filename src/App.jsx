@@ -698,31 +698,84 @@ function TrackingPage({ currentUser, products }) {
 
   const activeProduct = selectedProduct ?? sellerProducts[0];
   const scanCount = Math.max(3, Math.min(12, Math.round((activeProduct.quantity || 0) / 10)));
+  const basePath = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
+  const publicProductPath = `${basePath}/product/${activeProduct.id}`.replace(/\/{2,}/g, "/");
+  const publicProductUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${publicProductPath}`
+      : publicProductPath;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(
+    publicProductUrl
+  )}`;
   const movementHistory = [
     {
-      id: "stage-1",
-      title: "Партия сформирована",
-      location: activeProduct.source || "Поле",
-      timestamp: `${activeProduct.receivedAt} 08:40`,
-      status: "completed",
+      id: "stage-3",
+      title: "Сканирование при приёмке",
+      location: `${activeProduct.destination}, Алматы`,
+      person: "Менеджер Ахметов К.",
+      timestamp: "17.04.2026 14:23",
     },
     {
       id: "stage-2",
-      title: "Сканирование на сортировке",
-      location: "Сортировочный узел",
-      timestamp: `${activeProduct.receivedAt} 13:20`,
-      status: "completed",
+      title: "Сканирование при отгрузке",
+      location: 'Транспортная компания "КазЛогистика"',
+      person: "Водитель Петров И.",
+      timestamp: "16.04.2026 09:15",
     },
     {
-      id: "stage-3",
-      title: "Доставка на склад",
-      location: activeProduct.destination || "Склад",
-      timestamp: `${activeProduct.receivedAt} 17:45`,
-      status: "active",
+      id: "stage-1",
+      title: "Создание партии",
+      location: activeProduct.source || "Фермерское хозяйство",
+      person: `Фермер ${currentUser?.name || "Иванов С."}`,
+      timestamp: "15.04.2026 16:45",
     },
   ];
 
   const productLink = `/product/${activeProduct.id}`;
+
+  const handleDownloadQr = () => {
+    const link = document.createElement("a");
+    link.href = qrCodeUrl;
+    link.download = `${activeProduct.batchId || "batch"}-qr.png`;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.click();
+  };
+
+  const handlePrintQr = () => {
+    const printWindow = window.open("", "_blank", "width=760,height=880");
+    if (!printWindow) {
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="ru">
+        <head>
+          <meta charset="UTF-8" />
+          <title>QR-код партии ${activeProduct.batchId}</title>
+          <style>
+            body { font-family: Manrope, Arial, sans-serif; margin: 24px; color: #1b2a16; }
+            .wrap { max-width: 560px; margin: 0 auto; text-align: center; }
+            img { width: 320px; height: 320px; border: 1px solid #d4ddc6; border-radius: 20px; padding: 10px; }
+            h1 { font-size: 26px; margin: 0 0 8px; }
+            p { margin: 6px 0; color: #607255; }
+          </style>
+        </head>
+        <body>
+          <div class="wrap">
+            <h1>QR-код партии ${activeProduct.batchId}</h1>
+            <p>${activeProduct.name}</p>
+            <img src="${qrCodeUrl}" alt="QR код партии" />
+            <p>Ссылка: ${publicProductUrl}</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.onload = () => printWindow.print();
+  };
 
   return (
     <div className="space-y-5">
@@ -852,25 +905,59 @@ function TrackingPage({ currentUser, products }) {
           </Link>
         </div>
 
-        <div className="mt-5 space-y-3">
-          {movementHistory.map((entry) => (
-            <article
-              key={entry.id}
-              className={`rounded-2xl border px-4 py-3 ${
-                entry.status === "active"
-                  ? "border-[rgba(63,143,58,0.45)] bg-[rgba(63,143,58,0.08)]"
-                  : "border-[var(--line)] bg-[var(--surface)]"
-              }`}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-base font-bold text-[var(--text)]">{entry.title}</p>
-                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                  {entry.timestamp}
-                </span>
+        <div className="mt-5 space-y-6">
+          {movementHistory.map((entry, index) => (
+            <article key={entry.id} className="relative grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
+              <div className="relative pl-10">
+                {index < movementHistory.length - 1 && (
+                  <span className="absolute left-[10px] top-7 h-[62px] w-[2px] bg-[rgba(63,143,58,0.2)]" />
+                )}
+                <span className="absolute left-0 top-1.5 h-5 w-5 rounded-full border-4 border-[rgba(63,143,58,0.18)] bg-[var(--brand)]" />
+                <p className="text-4xl font-bold leading-tight text-[var(--text)]">{entry.title}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1 text-xl text-[var(--muted)]">
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 21s7-4.6 7-10a7 7 0 1 0-14 0c0 5.4 7 10 7 10z" />
+                      <circle cx="12" cy="11" r="2.5" />
+                    </svg>
+                    {entry.location}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="7.5" r="3.5" />
+                      <path d="M4 20c1.2-3.8 4.3-5.5 8-5.5s6.8 1.7 8 5.5" />
+                    </svg>
+                    {entry.person}
+                  </span>
+                </div>
               </div>
-              <p className="mt-1 text-sm text-[var(--muted)]">{entry.location}</p>
+              <p className="text-right text-xl font-semibold text-[var(--muted)]">{entry.timestamp}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="glass-panel motion-card motion-delay-4 p-5 sm:p-6">
+        <h2 className="text-2xl font-extrabold text-[var(--text)]">QR-код партии</h2>
+        <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-center">
+          <div className="grid h-[136px] w-[136px] place-items-center rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-2">
+            <img src={qrCodeUrl} alt={`QR-код партии ${activeProduct.batchId}`} className="h-full w-full rounded-2xl object-contain" />
+          </div>
+
+          <div className="flex-1">
+            <p className="text-lg leading-7 text-[var(--muted)]">
+              QR-код содержит всю информацию о партии и её истории перемещений. Покажите этот код
+              покупателям для подтверждения прозрачности.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button type="button" onClick={handleDownloadQr} className="btn-primary">
+                Скачать QR
+              </button>
+              <button type="button" onClick={handlePrintQr} className="btn-secondary">
+                Распечатать
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     </div>
