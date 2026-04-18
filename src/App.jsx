@@ -1154,6 +1154,7 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
   const wheat = [42, 41, 44, 44, 46, 47];
   const apples = [85, 84, 90, 89, 94, 95];
   const potato = [35, 34, 37, 36, 39, 40];
+  const mapImageUrl = `${import.meta.env.BASE_URL}kyrgyzstan-adm-location-map.svg`;
   const regionMap = [
     {
       id: "talas",
@@ -1371,6 +1372,16 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
               viewBox="0 0 1644 829"
               className="h-[360px] w-full rounded-xl border border-[var(--line)] bg-[#eef3ea]"
             >
+              <image
+                href={mapImageUrl}
+                x="0"
+                y="0"
+                width="1644"
+                height="829"
+                preserveAspectRatio="xMidYMid meet"
+                opacity="0.8"
+                style={{ pointerEvents: "none" }}
+              />
               {regionMap.map((region) => {
                 const isActive = region.id === selectedRegion.id;
                 return (
@@ -1381,7 +1392,7 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
                   >
                     <polygon
                       points={region.hotspot}
-                      fill={region.color}
+                      fill="#2f8538"
                       fillOpacity={isActive ? 1 : 0.92}
                       stroke={isActive ? "#173020" : "#f4f7f2"}
                       strokeWidth={isActive ? 5 : 3}
