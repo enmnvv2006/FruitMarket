@@ -1089,6 +1089,110 @@ function AnalyticsPage({ currentUser, products }) {
   );
 }
 
+function GovernmentDashboardPage({ currentUser }) {
+  const statCards = [
+    { title: "Объём производства", value: "1,155", suffix: "тыс. тонн", trend: "↑ 22.8% за месяц" },
+    { title: "Активных фермеров", value: "8,630", suffix: "", trend: "↑ 12.4% за месяц" },
+    { title: "Завершённых сделок", value: "2,847", suffix: "", trend: "↑ 18.5% за месяц" },
+    { title: "Вклад в ВВП", value: "124.5", suffix: "млн сом", trend: "↑ 15.2% за месяц" },
+  ];
+
+  const labels = ["15 мар", "17 мар", "19 мар", "21 мар", "24 мар", "25 мар"];
+  const wheat = [42, 41, 44, 44, 46, 47];
+  const apples = [85, 84, 90, 89, 94, 95];
+  const potato = [35, 34, 37, 36, 39, 40];
+
+  return (
+    <div className="space-y-5">
+      <section className="glass-panel px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--brand)] text-xl font-bold text-white">AC</span>
+            <div>
+              <p className="text-xl font-extrabold text-[var(--text)]">Министерство сельского хозяйства КР</p>
+              <p className="text-sm text-[var(--muted)]">Платформа Aykyn Charba</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-2 py-1">
+            <button type="button" className="rounded-xl bg-[var(--brand)] px-3 py-2 text-sm font-semibold text-white">Дашборд</button>
+            <button type="button" className="rounded-xl px-3 py-2 text-sm font-semibold text-[var(--muted)]">Регионы</button>
+            <button type="button" className="rounded-xl px-3 py-2 text-sm font-semibold text-[var(--muted)]">Отчёты</button>
+            <button type="button" className="rounded-xl px-3 py-2 text-sm font-semibold text-[var(--muted)]">Прослеживаемость</button>
+          </div>
+
+          <div className="text-right">
+            <p className="text-base font-bold text-[var(--text)]">{currentUser?.name || "Гос-пользователь"}</p>
+            <p className="text-sm text-[var(--muted)]">{currentUser?.title || "Главный аналитик"}</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h1 className="text-4xl font-extrabold tracking-tight text-[var(--text)]">Дашборд государственного мониторинга</h1>
+        <p className="mt-2 text-lg text-[var(--muted)]">Агрегированная статистика по платформе Aykyn Charba</p>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+        {statCards.map((card, index) => (
+          <article key={card.title} className={`glass-panel motion-card p-5 ${index < 3 ? `motion-delay-${index + 1}` : "motion-delay-4"}`}>
+            <p className="text-lg text-[var(--muted)]">{card.title}</p>
+            <p className="mt-2 text-5xl font-extrabold leading-none text-[var(--text)]">
+              {card.value} {card.suffix ? <span className="text-xl font-semibold text-[var(--muted)]">{card.suffix}</span> : null}
+            </p>
+            <p className="mt-3 text-lg font-semibold text-[var(--brand)]">{card.trend}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+        <article className="glass-panel motion-card motion-delay-4 p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-2xl font-extrabold text-[var(--text)]">Карта производства по регионам</h2>
+            <p className="text-sm font-semibold text-[var(--muted)]">Кликните на область для детализации</p>
+          </div>
+          <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-3">
+            <svg viewBox="0 0 640 320" className="h-[340px] w-full">
+              <rect x="0" y="0" width="640" height="320" fill="#f5f8f1" />
+              <path d="M85 160 L190 135 L235 188 L180 235 L104 220 Z" fill="#79bf7d" />
+              <path d="M192 135 L334 108 L381 160 L320 214 L235 188 Z" fill="#2f8538" />
+              <path d="M145 224 L239 238 L239 310 L130 300 L98 260 Z" fill="#4ba64f" />
+              <path d="M239 238 L356 252 L356 316 L239 310 Z" fill="#1f6e2e" />
+              <path d="M356 252 L504 220 L546 280 L472 318 L356 296 Z" fill="#7cc282" />
+            </svg>
+          </div>
+        </article>
+
+        <article className="glass-panel motion-card motion-delay-4 p-5 sm:p-6">
+          <h2 className="text-2xl font-extrabold text-[var(--text)]">Динамика цен за 10 дней</h2>
+          <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-3">
+            <svg viewBox="0 0 360 280" className="h-[320px] w-full">
+              <g stroke="#dbe3d3" strokeWidth="1">
+                <line x1="40" y1="30" x2="40" y2="240" />
+                <line x1="40" y1="240" x2="330" y2="240" />
+                {[70, 110, 150, 190].map((y) => <line key={y} x1="40" y1={y} x2="330" y2={y} strokeDasharray="4 4" />)}
+              </g>
+              <polyline fill="none" stroke="#f5a621" strokeWidth="3" points={labels.map((_, i) => `${40 + i * 58},${240 - wheat[i] * 2.3}`).join(" ")} />
+              <polyline fill="none" stroke="#2f8538" strokeWidth="3.5" points={labels.map((_, i) => `${40 + i * 58},${240 - apples[i] * 2.3}`).join(" ")} />
+              <polyline fill="none" stroke="#63b76b" strokeWidth="3" points={labels.map((_, i) => `${40 + i * 58},${240 - potato[i] * 2.3}`).join(" ")} />
+              {labels.map((label, i) => (
+                <text key={label} x={40 + i * 58} y="262" textAnchor="middle" fontSize="13" fill="#607255">
+                  {label}
+                </text>
+              ))}
+            </svg>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
+            <span className="text-[#f5a621]">● Пшеница</span>
+            <span className="text-[#2f8538]">● Яблоки</span>
+            <span className="text-[#63b76b]">● Картофель</span>
+          </div>
+        </article>
+      </section>
+    </div>
+  );
+}
+
 function LandingPage({ products, isAuthenticated }) {
   const totalItems = products.length;
   const totalVolume = products.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
@@ -1215,7 +1319,8 @@ function AppContent() {
     isAuthChecked,
     initializeAuth,
   } = useCart();
-  const showDashboardHero = isAuthenticated && location.pathname === "/";
+  const isGovernmentUser = currentUser?.role === "gov";
+  const showDashboardHero = isAuthenticated && !isGovernmentUser && location.pathname === "/";
   const sellersById = useMemo(
     () => Object.fromEntries(mockSellers.map((seller) => [seller.id, seller])),
     []
@@ -1481,12 +1586,12 @@ function AppContent() {
   return (
     <div className="min-h-screen p-3 sm:p-4">
       <div className="mx-auto flex w-full max-w-[1700px] gap-4">
-        {isAuthenticated && (
+        {isAuthenticated && !isGovernmentUser && (
           <AppSidebar currentUser={currentUser} cartCount={cartCount} logout={logout} />
         )}
 
         <main className="min-w-0 flex-1 space-y-4">
-          {isAuthenticated && (
+          {isAuthenticated && !isGovernmentUser && (
             <AppTopBar
               currentUser={currentUser}
               cartCount={cartCount}
@@ -1503,23 +1608,35 @@ function AppContent() {
           {showDashboardHero && <DashboardHeader products={products} />}
 
           <Routes>
-          <Route path="/auth" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />} />
+          <Route path="/auth" element={isAuthenticated ? <Navigate to={isGovernmentUser ? "/gov" : "/"} replace /> : <AuthPage />} />
 
           <Route
             path="/"
             element={
               isAuthenticated ? (
-                <HomePage
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  selectedCategory={selectedCategory}
-                  setSelectedCategory={setSelectedCategory}
-                  filteredProducts={filteredProducts}
-                  sellersById={sellersById}
-                />
+                isGovernmentUser ? (
+                  <Navigate to="/gov" replace />
+                ) : (
+                  <HomePage
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                    filteredProducts={filteredProducts}
+                    sellersById={sellersById}
+                  />
+                )
               ) : (
                 <LandingPage products={products} isAuthenticated={isAuthenticated} />
               )
+            }
+          />
+          <Route
+            path="/gov"
+            element={
+              <RequireAuth>
+                {isGovernmentUser ? <GovernmentDashboardPage currentUser={currentUser} /> : <Navigate to="/" replace />}
+              </RequireAuth>
             }
           />
           <Route

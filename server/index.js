@@ -8,6 +8,7 @@ import cors from "cors";
 import express from "express";
 import jwt from "jsonwebtoken";
 import { adminAccount } from "./data/adminAccount.js";
+import { govAccount } from "./data/govAccount.js";
 import { sellerAccounts } from "./data/sellerAccounts.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -109,6 +110,8 @@ function sanitizeUser(user) {
     email: user.email ?? null,
     role: user.role,
     sellerId: user.sellerId ?? null,
+    title: user.title ?? null,
+    organization: user.organization ?? null,
     isBlocked: Boolean(user.isBlocked),
   };
 }
@@ -182,6 +185,18 @@ function buildAdminUser() {
   };
 }
 
+function buildGovUser() {
+  return {
+    id: "gov",
+    name: govAccount.name,
+    email: null,
+    role: "gov",
+    sellerId: null,
+    title: govAccount.title,
+    organization: govAccount.organization,
+  };
+}
+
 function signAccessToken(user) {
   return jwt.sign(
     {
@@ -190,6 +205,8 @@ function signAccessToken(user) {
       sellerId: user.sellerId ?? null,
       name: user.name,
       email: user.email ?? null,
+      title: user.title ?? null,
+      organization: user.organization ?? null,
       type: "access",
     },
     ACCESS_SECRET,
@@ -276,6 +293,8 @@ function fromAccessPayload(payload) {
     email: payload.email,
     role: payload.role,
     sellerId: payload.sellerId ?? null,
+    title: payload.title ?? null,
+    organization: payload.organization ?? null,
     isBlocked: false,
   };
 }
@@ -451,6 +470,24 @@ app.post("/api/auth/login/admin", async (req, res) => {
   }
 });
 
+app.post("/api/auth/login/gov", async (req, res) => {
+  try {
+    const username = String(req.body?.username ?? "").trim();
+    const password = String(req.body?.password ?? "");
+
+    if (username !== govAccount.username || password !== govAccount.password) {
+      res.status(401).json({ message: "Неверный логин или пароль гос-пользователя." });
+      return;
+    }
+
+    const govUser = buildGovUser();
+    const payload = await issueAuth(res, govUser);
+    res.json(payload);
+  } catch {
+    res.status(500).json({ message: "Не удалось выполнить вход гос-пользователя." });
+  }
+});
+
 app.post("/api/auth/refresh", async (req, res) => {
   try {
     const refreshToken = req.cookies?.[REFRESH_COOKIE];
@@ -490,6 +527,10 @@ app.post("/api/auth/refresh", async (req, res) => {
 
     if (payload.role === "admin") {
       user = buildAdminUser();
+    }
+
+    if (payload.role === "gov") {
+      user = buildGovUser();
     }
 
     if (!user) {

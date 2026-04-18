@@ -17,6 +17,7 @@ export function useCart() {
   const loginBuyer = useCartStore((state) => state.loginBuyer);
   const loginSeller = useCartStore((state) => state.loginSeller);
   const loginAdmin = useCartStore((state) => state.loginAdmin);
+  const loginGov = useCartStore((state) => state.loginGov);
   const logout = useCartStore((state) => state.logout);
   const addToCart = useCartStore((state) => state.addToCart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
@@ -52,6 +53,10 @@ export function useCart() {
       return notification.recipientRole === "admin";
     }
 
+    if (currentUser.role === "gov") {
+      return notification.recipientRole === "gov";
+    }
+
     return false;
   });
   const unreadNotificationsCount = userNotifications.filter(
@@ -75,6 +80,7 @@ export function useCart() {
     loginBuyer,
     loginSeller,
     loginAdmin,
+    loginGov,
     logout,
     addToCart,
     removeFromCart,

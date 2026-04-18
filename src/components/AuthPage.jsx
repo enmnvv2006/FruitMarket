@@ -40,10 +40,16 @@ const initialAdminLoginState = {
   password: "",
 };
 
+const initialGovLoginState = {
+  username: "",
+  password: "",
+};
+
 const REMEMBER_KEYS = {
   buyer: "fruit-market-remember-buyer",
   seller: "fruit-market-remember-seller",
   admin: "fruit-market-remember-admin",
+  gov: "fruit-market-remember-gov",
 };
 
 const FARMER_APPLICATIONS_KEY = "fruit-market-farmer-applications";
@@ -122,7 +128,7 @@ function EyeIcon({ hidden }) {
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { currentUser, loginBuyer, loginSeller, loginAdmin, register, authLoading } = useCart();
+  const { currentUser, loginBuyer, loginSeller, loginAdmin, loginGov, register, authLoading } = useCart();
 
   const [view, setView] = useState("role-selection");
   const [loginType, setLoginType] = useState("buyer");
@@ -131,12 +137,14 @@ export default function AuthPage() {
   const [buyerLoginForm, setBuyerLoginForm] = useState(initialBuyerLoginState);
   const [sellerLoginForm, setSellerLoginForm] = useState(initialSellerLoginState);
   const [adminLoginForm, setAdminLoginForm] = useState(initialAdminLoginState);
+  const [govLoginForm, setGovLoginForm] = useState(initialGovLoginState);
   const [registerForm, setRegisterForm] = useState(initialRegisterState);
   const [farmerRegisterForm, setFarmerRegisterForm] = useState(initialFarmerRegisterState);
 
   const [rememberBuyer, setRememberBuyer] = useState(false);
   const [rememberSeller, setRememberSeller] = useState(false);
   const [rememberAdmin, setRememberAdmin] = useState(false);
+  const [rememberGov, setRememberGov] = useState(false);
 
   const [showFarmerPassword, setShowFarmerPassword] = useState(false);
   const [showFarmerConfirmPassword, setShowFarmerConfirmPassword] = useState(false);
@@ -146,6 +154,7 @@ export default function AuthPage() {
     const rememberedBuyer = readRemembered(REMEMBER_KEYS.buyer);
     const rememberedSeller = readRemembered(REMEMBER_KEYS.seller);
     const rememberedAdmin = readRemembered(REMEMBER_KEYS.admin);
+    const rememberedGov = readRemembered(REMEMBER_KEYS.gov);
 
     if (rememberedBuyer?.email && rememberedBuyer?.password) {
       setBuyerLoginForm({
@@ -170,10 +179,18 @@ export default function AuthPage() {
       });
       setRememberAdmin(true);
     }
+
+    if (rememberedGov?.username && rememberedGov?.password) {
+      setGovLoginForm({
+        username: String(rememberedGov.username),
+        password: String(rememberedGov.password),
+      });
+      setRememberGov(true);
+    }
   }, []);
 
   if (currentUser) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={currentUser.role === "gov" ? "/gov" : "/"} replace />;
   }
 
   const handleBuyerLoginSubmit = async (event) => {
@@ -231,6 +248,25 @@ export default function AuthPage() {
     }
 
     navigate("/admin", { replace: true });
+  };
+
+  const handleGovLoginSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    const result = await loginGov(govLoginForm);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    if (rememberGov) {
+      saveRemembered(REMEMBER_KEYS.gov, govLoginForm);
+    } else {
+      localStorage.removeItem(REMEMBER_KEYS.gov);
+    }
+
+    navigate("/gov", { replace: true });
   };
 
   const handleBuyerRegisterSubmit = async (event) => {
@@ -424,22 +460,66 @@ export default function AuthPage() {
       );
     }
 
+    if (loginType === "admin") {
+      return (
+        <form onSubmit={handleAdminLoginSubmit} className="space-y-3">
+          <input
+            type="text"
+            placeholder="Логин администратора"
+            value={adminLoginForm.username}
+            onChange={(event) => setAdminLoginForm((prev) => ({ ...prev, username: event.target.value }))}
+            className="w-full rounded-[14px] border border-transparent bg-[#f1f2f3] px-4 py-3 text-sm text-[#0f172a] outline-none transition focus:border-[rgba(31,111,59,0.35)]"
+            required
+          />
+          <div className="relative">
+            <input
+              type={showLoginPassword ? "text" : "password"}
+              placeholder="Пароль администратора"
+              value={adminLoginForm.password}
+              onChange={(event) => setAdminLoginForm((prev) => ({ ...prev, password: event.target.value }))}
+              className="w-full rounded-[14px] border border-transparent bg-[#f1f2f3] px-4 py-3 pr-12 text-sm text-[#0f172a] outline-none transition focus:border-[rgba(31,111,59,0.35)]"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowLoginPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b]"
+              aria-label="Показать или скрыть пароль"
+            >
+              <EyeIcon hidden={!showLoginPassword} />
+            </button>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+            <input
+              type="checkbox"
+              checked={rememberAdmin}
+              onChange={(event) => setRememberAdmin(event.target.checked)}
+            />
+            Запомнить логин и пароль
+          </label>
+          <button type="submit" className="w-full rounded-[14px] bg-[#1d6f3a] px-4 py-3 text-base font-semibold text-white transition hover:brightness-95" disabled={authLoading}>
+            {authLoading ? "Вход..." : "Войти"}
+          </button>
+        </form>
+      );
+    }
+
     return (
-      <form onSubmit={handleAdminLoginSubmit} className="space-y-3">
+      <form onSubmit={handleGovLoginSubmit} className="space-y-3">
         <input
           type="text"
-          placeholder="Логин администратора"
-          value={adminLoginForm.username}
-          onChange={(event) => setAdminLoginForm((prev) => ({ ...prev, username: event.target.value }))}
+          placeholder="Логин гос-пользователя"
+          value={govLoginForm.username}
+          onChange={(event) => setGovLoginForm((prev) => ({ ...prev, username: event.target.value }))}
           className="w-full rounded-[14px] border border-transparent bg-[#f1f2f3] px-4 py-3 text-sm text-[#0f172a] outline-none transition focus:border-[rgba(31,111,59,0.35)]"
           required
         />
         <div className="relative">
           <input
             type={showLoginPassword ? "text" : "password"}
-            placeholder="Пароль администратора"
-            value={adminLoginForm.password}
-            onChange={(event) => setAdminLoginForm((prev) => ({ ...prev, password: event.target.value }))}
+            placeholder="Пароль гос-пользователя"
+            value={govLoginForm.password}
+            onChange={(event) => setGovLoginForm((prev) => ({ ...prev, password: event.target.value }))}
             className="w-full rounded-[14px] border border-transparent bg-[#f1f2f3] px-4 py-3 pr-12 text-sm text-[#0f172a] outline-none transition focus:border-[rgba(31,111,59,0.35)]"
             required
           />
@@ -455,8 +535,8 @@ export default function AuthPage() {
         <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
           <input
             type="checkbox"
-            checked={rememberAdmin}
-            onChange={(event) => setRememberAdmin(event.target.checked)}
+            checked={rememberGov}
+            onChange={(event) => setRememberGov(event.target.checked)}
           />
           Запомнить логин и пароль
         </label>
@@ -771,7 +851,7 @@ export default function AuthPage() {
               По email и паролю
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-[#f1f2f3] p-1">
+            <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-[#f1f2f3] p-1 sm:grid-cols-4">
               <button
                 type="button"
                 onClick={() => {
@@ -807,6 +887,18 @@ export default function AuthPage() {
                 }`}
               >
                 Админ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginType("gov");
+                  setError("");
+                }}
+                className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                  loginType === "gov" ? "bg-white text-[#111827]" : "text-[#64748b]"
+                }`}
+              >
+                Гос
               </button>
             </div>
 

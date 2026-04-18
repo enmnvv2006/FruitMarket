@@ -95,6 +95,19 @@ export async function loginAdmin(body) {
   return payload;
 }
 
+export async function loginGov(body) {
+  const response = await fetch(`${API_BASE}/login/gov`, {
+    method: "POST",
+    credentials: "include",
+    headers: buildHeaders(),
+    body: JSON.stringify(body),
+  });
+
+  const payload = await parseResponse(response);
+  setAccessToken(payload.accessToken);
+  return payload;
+}
+
 export async function refreshSession() {
   const response = await fetch(`${API_BASE}/refresh`, {
     method: "POST",

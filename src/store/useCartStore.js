@@ -4,6 +4,7 @@ import {
   clearAccessToken,
   loginAdmin as loginAdminRequest,
   loginBuyer as loginBuyerRequest,
+  loginGov as loginGovRequest,
   loginSeller as loginSellerRequest,
   logoutSession,
   refreshSession,
@@ -75,6 +76,10 @@ const isNotificationForUser = (notification, user) => {
 
   if (user.role === "admin") {
     return notification.recipientRole === "admin";
+  }
+
+  if (user.role === "gov") {
+    return notification.recipientRole === "gov";
   }
 
   return false;
@@ -176,6 +181,26 @@ export const useCartStore = create(
 
         try {
           const payload = await loginAdminRequest({ username, password });
+
+          set({
+            currentUser: payload.user,
+            cart: [],
+            authLoading: false,
+            isAuthChecked: true,
+          });
+
+          return { ok: true, user: payload.user };
+        } catch (error) {
+          set({ authLoading: false, isAuthChecked: true });
+          return { ok: false, error: error.message };
+        }
+      },
+
+      loginGov: async ({ username, password }) => {
+        set({ authLoading: true });
+
+        try {
+          const payload = await loginGovRequest({ username, password });
 
           set({
             currentUser: payload.user,
