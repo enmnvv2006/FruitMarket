@@ -1,5 +1,11 @@
-const API_BASE =
-  (import.meta.env.VITE_AUTH_API_BASE_URL || "/api/auth").replace(/\/+$/, "");
+const DEFAULT_GITHUB_PAGES_API_BASE = "https://fruitmarket-auth.onrender.com/api/auth";
+const isGitHubPagesHost =
+  typeof window !== "undefined" && window.location.hostname.endsWith("github.io");
+
+const API_BASE = (
+  import.meta.env.VITE_AUTH_API_BASE_URL ||
+  (isGitHubPagesHost ? DEFAULT_GITHUB_PAGES_API_BASE : "/api/auth")
+).replace(/\/+$/, "");
 
 let accessToken = null;
 
