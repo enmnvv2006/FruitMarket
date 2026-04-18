@@ -899,10 +899,12 @@ function AppContent() {
 
     const seller = sellersById[product.sellerId];
     const outOfStock = product.quantity <= 0;
+    const basePath = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
+    const productPath = `${basePath}/product/${product.id}`.replace(/\/{2,}/g, "/");
     const productLink =
       typeof window !== "undefined"
-        ? `${window.location.origin}/product/${product.id}`
-        : `/product/${product.id}`;
+        ? `${window.location.origin}${productPath}`
+        : productPath;
     const qrPayload = JSON.stringify(
       {
         id: product.id,
@@ -1087,11 +1089,7 @@ function AppContent() {
           />
           <Route
             path="/product/:productId"
-            element={
-              <RequireAuth>
-                <ProductDetailsPage />
-              </RequireAuth>
-            }
+            element={<ProductDetailsPage />}
           />
           <Route
             path="/admin"
