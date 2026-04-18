@@ -1124,9 +1124,11 @@ function AppContent() {
 }
 
 export default function App() {
+  const routerBasename = import.meta.env.BASE_URL;
+
   return (
     <CartProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={routerBasename}>
         <AppContent />
         <ToastContainer position="top-right" autoClose={1800} newestOnTop />
       </BrowserRouter>
