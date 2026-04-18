@@ -905,22 +905,8 @@ function AppContent() {
       typeof window !== "undefined"
         ? `${window.location.origin}${productPath}`
         : productPath;
-    const qrPayload = JSON.stringify(
-      {
-        id: product.id,
-        name: product.name,
-        batchId: product.batchId,
-        seller: seller?.shopName ?? "Не указан",
-        receivedAt: product.receivedAt,
-        source: product.source,
-        destination: product.destination,
-        url: productLink,
-      },
-      null,
-      0,
-    );
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
-      qrPayload,
+      productLink,
     )}`;
 
     return (
