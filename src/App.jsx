@@ -194,6 +194,8 @@ function AppSidebar({ currentUser, cartCount, logout }) {
       ? [
           { to: "/", label: "Дашборд", kind: "dashboard" },
           { to: "/admin", label: "Админ-панель", kind: "admin" },
+          { to: "/tracking", label: "Прослеживаемость", kind: "tracking" },
+          { to: "/analytics", label: "Аналитика", kind: "analytics" },
         ]
       : currentUser.role === "seller"
         ? [
@@ -322,7 +324,12 @@ function AppTopBar({
 
   const mobileLinks =
     currentUser.role === "admin"
-      ? [{ to: "/", label: "Дашборд" }, { to: "/admin", label: "Админ" }]
+      ? [
+          { to: "/", label: "Дашборд" },
+          { to: "/admin", label: "Админ" },
+          { to: "/tracking", label: "Прослеживаемость" },
+          { to: "/analytics", label: "Аналитика" },
+        ]
       : currentUser.role === "seller"
         ? [
             { to: "/", label: "Дашборд" },
@@ -1535,7 +1542,7 @@ function AppContent() {
             path="/tracking"
             element={
               <RequireAuth>
-                {currentUser?.role === "seller" ? (
+                {currentUser?.role === "seller" || currentUser?.role === "admin" ? (
                   <TrackingPage currentUser={currentUser} products={products} />
                 ) : (
                   <Navigate to="/" replace />
@@ -1547,7 +1554,7 @@ function AppContent() {
             path="/analytics"
             element={
               <RequireAuth>
-                {currentUser?.role === "seller" ? (
+                {currentUser?.role === "seller" || currentUser?.role === "admin" ? (
                   <AnalyticsPage currentUser={currentUser} products={products} />
                 ) : (
                   <Navigate to="/" replace />
