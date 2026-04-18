@@ -1161,8 +1161,8 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
       name: "Таласская область",
       shortName: "Талас",
       hotspot:
-        "210,180 290,130 420,120 540,150 590,210 560,260 470,280 350,270 250,240 190,210",
-      label: { x: 360, y: 200 },
+        "240,260 360,220 430,290 380,360 260,360 210,300",
+      label: { x: 320, y: 300 },
       color: "#e8751a",
       productionKtons: 102,
       farmers: 614,
@@ -1174,8 +1174,8 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
       name: "Чуйская область",
       shortName: "Чуй",
       hotspot:
-        "560,130 700,110 850,120 940,150 980,210 930,250 820,260 700,250 600,230 560,190",
-      label: { x: 760, y: 190 },
+        "430,250 690,180 860,220 900,300 760,350 560,340 430,300",
+      label: { x: 650, y: 285 },
       color: "#1e5faa",
       productionKtons: 224,
       farmers: 1308,
@@ -1187,8 +1187,8 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
       name: "Иссык-Кульская область",
       shortName: "Иссык-Куль",
       hotspot:
-        "940,150 1090,110 1290,105 1460,130 1510,190 1480,250 1390,300 1240,310 1100,300 980,250",
-      label: { x: 1240, y: 220 },
+        "900,240 1180,210 1400,260 1460,320 1360,380 1100,370 950,340",
+      label: { x: 1145, y: 305 },
       color: "#e1122a",
       productionKtons: 141,
       farmers: 922,
@@ -1200,8 +1200,8 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
       name: "Джалал-Абадская область",
       shortName: "Джалал-Абад",
       hotspot:
-        "190,220 260,250 360,270 500,280 620,270 720,300 760,360 730,430 620,470 500,470 390,450 290,420 220,360 170,300",
-      label: { x: 500, y: 355 },
+        "380,400 560,340 760,350 840,430 760,540 560,530 420,500 350,450",
+      label: { x: 610, y: 445 },
       color: "#d91b8e",
       productionKtons: 186,
       farmers: 1420,
@@ -1213,8 +1213,8 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
       name: "Нарынская область",
       shortName: "Нарын",
       hotspot:
-        "720,280 840,260 980,260 1100,280 1220,300 1290,350 1300,430 1240,510 1120,560 980,580 860,560 780,510 740,430 720,360",
-      label: { x: 980, y: 420 },
+        "760,350 960,340 1180,390 1180,520 980,540 840,510 780,430",
+      label: { x: 970, y: 450 },
       color: "#138f3b",
       productionKtons: 133,
       farmers: 844,
@@ -1226,8 +1226,8 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
       name: "Ошская область",
       shortName: "Ош",
       hotspot:
-        "560,470 640,450 760,430 860,440 940,500 980,580 940,660 840,730 720,760 620,730 560,660 520,590 520,530",
-      label: { x: 760, y: 600 },
+        "760,540 980,540 1180,520 1320,560 1250,650 980,640 860,620",
+      label: { x: 1025, y: 590 },
       color: "#e5a92d",
       productionKtons: 208,
       farmers: 1678,
@@ -1239,8 +1239,8 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
       name: "Баткенская область",
       shortName: "Баткен",
       hotspot:
-        "120,560 220,540 320,540 420,560 500,600 520,650 470,700 380,720 270,710 180,690 120,650 90,610",
-      label: { x: 300, y: 630 },
+        "330,530 560,530 760,540 860,620 700,680 530,700 360,650",
+      label: { x: 565, y: 620 },
       color: "#6c318f",
       productionKtons: 161,
       farmers: 1189,
@@ -1393,18 +1393,18 @@ function GovernmentDashboardPage({ currentUser, onLogout }) {
                     <polygon
                       points={region.hotspot}
                       fill="#2f8538"
-                      fillOpacity={isActive ? 1 : 0.92}
+                      fillOpacity={isActive ? 0.56 : 0.34}
                       stroke={isActive ? "#173020" : "#f4f7f2"}
-                      strokeWidth={isActive ? 5 : 3}
+                      strokeWidth={isActive ? 3.5 : 2}
                       className="transition-all duration-200"
                     />
                     <text
                       x={region.label.x}
                       y={region.label.y}
                       textAnchor="middle"
-                      fontSize="44"
+                      fontSize="32"
                       fontWeight="800"
-                      fill={isActive ? "#ffffff" : "rgba(255,255,255,0.88)"}
+                      fill={isActive ? "#ffffff" : "rgba(255,255,255,0.82)"}
                       className="pointer-events-none select-none"
                     >
                       {region.shortName}
